@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Prescription</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="product_detail.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <nav class="navbar">
+            <!-- Logo -->
+            <a href="#" class="nav-logo" aria-label="Home">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-plus"></i>
+                </div>
+                <span class="logo-text">Shama<span>Medical</span></span>
+            </a>
+
+            <!-- Search Bar -->
+            <form class="nav-search" role="search" onsubmit="event.preventDefault();">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="search" class="search-input"
+                    placeholder="search for medicines, vitamins, or health conditions" aria-label="Search">
+            </form>
+
+            <!-- Action Links -->
+            <div class="nav-actions">
+                <a href="#" class="btn-upload">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                    <span>upload prescription</span>
+                </a>
+
+                <a href="#" class="nav-account">
+                    <i class="fa-regular fa-user"></i>
+                    <span class="account-text">My Account</span>
+                </a>
+
+                <a href="#" class="nav-cart" aria-label="Shopping Cart">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </a>
+            </div>
+        </nav>
+    </header>
+
+
+    <!-- Breadcrumb Navigation -->
+    <div class="breadcrumb-container">
+        <nav class="breadcrumb">
+            <a href="/">Home</a> <i class="fa-solid fa-chevron-right"></i>
+            <a href="/shop">Shop</a> <i class="fa-solid fa-chevron-right"></i>
+            <a href="/shop/pain-fever">Pain &amp; Fever</a> <i class="fa-solid fa-chevron-right"></i>
+            <span>Ibuprofen 400mg</span>
+        </nav>
+    </div>
+
+    <!-- Main Product Layout Grid (2 Columns, 2 Rows) -->
+    <div class="pdp-wrapper">
+
+        <!-- Row 1 Left: Aside Column (Image Gallery Layout) -->
+        <aside class="pdp-gallery-aside">
+            <!-- Main Selected Featured Image -->
+            <div class="main-image-box">
+                <img id="mainProductImg"
+                    src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600&auto=format&fit=crop&q=80"
+                    alt="Ibuprofen 400mg Front">
+            </div>
+
+            <!-- Row of Small Thumbnail Images Below -->
+            <div class="thumbnail-row">
+                <div class="thumb-box active-thumb"
+                    onclick="document.getElementById('mainProductImg').src=this.querySelector('img').src">
+                    <img src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=150&auto=format&fit=crop&q=80"
+                        alt="Thumb 1">
+                </div>
+                <div class="thumb-box"
+                    onclick="document.getElementById('mainProductImg').src=this.querySelector('img').src">
+                    <img src="https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=150&auto=format&fit=crop&q=80"
+                        alt="Thumb 2">
+                </div>
+                <div class="thumb-box"
+                    onclick="document.getElementById('mainProductImg').src=this.querySelector('img').src">
+                    <img src="https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=150&auto=format&fit=crop&q=80"
+                        alt="Thumb 3">
+                </div>
+            </div>
+        </aside>
+
+        <!-- Row 1 Right: Main Column (Product Specs & Purchase Actions) -->
+        <main class="pdp-details-main">
+
+            <!-- Header Bar: Name, Rating & Status -->
+            <div class="pdp-header-bar">
+                <h1 class="pdp-title">Ibuprofen 400mg (NSAID)</h1>
+                <div class="pdp-meta-top">
+                    <span class="pdp-rating"><i class="fa-solid fa-star"></i> <strong>4.7</strong> (128)</span>
+                    <span class="pdp-stock-badge"><i class="fa-solid fa-check"></i> In Stock</span>
+                </div>
+            </div>
+
+            <!-- Brand, Quantity & Use Case Subtitle -->
+            <p class="pdp-brand-info">
+                Brand: <strong>Apotex</strong> • 100 Tablets • Pain Reliever / Fever Reducer
+            </p>
+
+            <!-- Price -->
+            <div class="pdp-price">₹120.00</div>
+
+            <!-- Detail Paragraph -->
+            <p class="pdp-description">
+                Fast-acting relief for minor aches and pains due to headache, muscular aches, arthritis, toothache,
+                backache, the common cold, and cramps. Temporarily reduces fever.
+            </p>
+
+            <!-- Quantity Counter + Add to Cart Row -->
+            <div class="pdp-action-row">
+                <div class="qty-counter">
+                    <button type="button" class="qty-btn">-</button>
+                    <input type="text" value="1" readonly class="qty-input">
+                    <button type="button" class="qty-btn">+</button>
+                </div>
+                <button class="btn-add-to-cart">
+                    <i class="fa-solid fa-cart-shopping"></i> Add to Cart
+                </button>
+            </div>
+
+            <!-- Add to Wishlist -->
+            <a href="#wishlist" class="btn-wishlist">
+                <i class="fa-regular fa-heart"></i> Add to Wishlist
+            </a>
+
+            <!-- OTC & HSA/FSA Eligibility Icons -->
+            <div class="pdp-badges-row">
+                <span class="eligibility-badge"><i class="fa-solid fa-prescription-bottle-medical"></i> OTC
+                    (Over-The-Counter)</span>
+                <span class="eligibility-badge"><i class="fa-solid fa-shield-halved"></i> HSA/FSA Eligible</span>
+            </div>
+
+        </main>
+
+        <!-- Row 2 Full Width (or Grid Column Span): Hover Tab Information Panels -->
+        <section class="pdp-tab-section">
+
+            <!-- Tab Navigation Titles -->
+            <div class="tab-headers">
+                <div class="tab-header-item">
+                    <span>Description &amp; Uses</span>
+                </div>
+
+                <div class="tab-header-item active-hover-tab">
+                    <span>Side Effects &amp; Warnings <i
+                            class="fa-solid fa-triangle-exclamation warning-icon"></i></span>
+                </div>
+
+                <div class="tab-header-item">
+                    <span>Dosage Information</span>
+                </div>
+
+                <div class="tab-header-item">
+                    <span>Storage &amp; Care</span>
+                </div>
+            </div>
+
+            <!-- Tab Content Cards -->
+            <div class="tab-content-container">
+
+                <!-- Default Visible Tab: Side Effects & Warnings -->
+                <div class="tab-pane active-pane">
+                    <h3 class="pane-heading">Important Safety Information &amp; Warnings</h3>
+
+                    <div class="alert-box allergy-alert">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <div><strong>Allergy Alert:</strong> Ibuprofen may cause a severe allergic reaction, especially
+                            in people allergic to aspirin.</div>
+                    </div>
+
+                    <ul class="warning-list">
+                        <li><i class="fa-solid fa-circle-exclamation"></i> <strong>Stomach bleeding warning:</strong>
+                            This product contains an NSAID, which may cause severe stomach bleeding.</li>
+                        <li><i class="fa-solid fa-circle-exclamation"></i> <strong>Do not use</strong> if you have ever
+                            had an allergic reaction to any other pain reliever/fever reducer.</li>
+                        <li><i class="fa-solid fa-circle-exclamation"></i> <strong>Stop use and ask a doctor</strong> if
+                            you feel faint, vomit blood, or have bloody stools.</li>
+                    </ul>
+
+                    <p class="side-effects-text"><strong>Common Side Effects:</strong> Mild indigestion, nausea,
+                        dizziness, or headache.</p>
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</body>
+
+</html>

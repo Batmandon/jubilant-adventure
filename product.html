@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Prescription</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="product.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <nav class="navbar">
+            <!-- Logo -->
+            <a href="#" class="nav-logo" aria-label="Home">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-plus"></i>
+                </div>
+                <span class="logo-text">Shama<span>Medical</span></span>
+            </a>
+
+            <!-- Search Bar -->
+            <form class="nav-search" role="search" onsubmit="event.preventDefault();">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="search" class="search-input"
+                    placeholder="search for medicines, vitamins, or health conditions" aria-label="Search">
+            </form>
+
+            <!-- Action Links -->
+            <div class="nav-actions">
+                <a href="#" class="btn-upload">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                    <span>upload prescription</span>
+                </a>
+
+                <a href="#" class="nav-account">
+                    <i class="fa-regular fa-user"></i>
+                    <span class="account-text">My Account</span>
+                </a>
+
+                <a href="#" class="nav-cart" aria-label="Shopping Cart">
+                    <i class="fa-solid fa-cart-shopping"></i>
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Breadcrumb Bar -->
+    <div class="breadcrumb-container">
+        <nav class="breadcrumb">
+            <a href="/">Home</a>
+            <i class="fa-solid fa-chevron-right"></i>
+            <span>Shop All</span>
+        </nav>
+    </div>
+
+    <!-- Main Catalog Container Grid -->
+    <main class="shop-container">
+
+        <!-- Sidebar Filters (Aside Column) -->
+        <aside class="sidebar-filters">
+
+            <!-- Header with Title & Filter Icon -->
+            <div class="filter-header">
+                <h1 class="filter-title">Filters</h1>
+                <div class="filter-icon-box">
+                    <i class="fa-solid fa-sliders"></i>
+                </div>
+            </div>
+
+            <!-- 1. Category Filter Group -->
+            <div class="filter-group">
+                <h2 class="filter-group-title">Category</h2>
+                <div class="filter-options-vertical">
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Prescription (Rx)</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Over-the-Counter (OTC)</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Vitamins &amp;
+                            Supplements</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Baby Care</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Personal Care</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Medical Devices</span></label>
+                </div>
+            </div>
+
+            <!-- 2. Price Range Range-Slider Group -->
+            <div class="filter-group">
+                <h2 class="filter-group-title">Price Range</h2>
+                <div class="price-slider-wrapper">
+                    <input type="range" min="0" max="100" value="75" class="price-slider">
+                    <div class="price-labels">
+                        <span>₹0</span>
+                        <span>₹100+</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Brand Filter Group (2 Columns) -->
+            <div class="filter-group">
+                <h2 class="filter-group-title">Brand</h2>
+                <div class="filter-options-grid">
+                    <label class="filter-checkbox"><input type="checkbox"> <span>GSK</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Cipla</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Pfizer</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>HealWell</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Bayer</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Sun Pharma</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Sandoz</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>More...</span></label>
+                </div>
+            </div>
+
+            <!-- 4. Form/Dosage Type Filter Group (2 Columns) -->
+            <div class="filter-group">
+                <h2 class="filter-group-title">Form</h2>
+                <div class="filter-options-grid">
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Tablet</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Powder</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Syrup</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Proteins</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Injection</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Drops</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Capsule</span></label>
+                    <label class="filter-checkbox"><input type="checkbox"> <span>Ointment</span></label>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- Main Products Section -->
+        <section class="products-section">
+
+            <!-- Header: Title, Count & Sort Dropdown -->
+            <div class="products-header">
+                <div>
+                    <h1 class="catalog-title">Shop All Products</h1>
+                    <span class="catalog-count">124 items found</span>
+                </div>
+
+                <div class="sort-wrapper">
+                    <label for="sort-select">Sort by:</label>
+                    <select id="sort-select" class="sort-dropdown">
+                        <option value="popularity">Popularity</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="newest">Newest Arrivals</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Products Grid (3 Columns) -->
+            <div class="catalog-grid">
+
+                <!-- Product Card 1 -->
+                <div class="product-card">
+                    <div class="product-img-box">
+                        <img src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=80"
+                            alt="Acetaminophen">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">Acetaminophen 500mg</h3>
+                        <span class="product-brand">McNeil</span>
+                        <div class="product-meta-row">
+                            <span class="product-price">₹45.00</span>
+                            <span class="product-pack">50 Tablets</span>
+                        </div>
+                        <button class="btn-add-cart">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- Product Card 2 (Prescription Badge) -->
+                <div class="product-card">
+                    <div class="product-img-box">
+                        <span class="rx-badge"><i class="fa-solid fa-file-prescription"></i> Prescription Required
+                            (Rx)</span>
+                        <img src="https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=300&auto=format&fit=crop&q=80"
+                            alt="Amoxicillin">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">Amoxicillin 500mg</h3>
+                        <span class="product-brand">Sandoz</span>
+                        <div class="product-meta-row">
+                            <span class="product-pack">30 Capsules</span>
+                            <span class="product-pack">30 Capsules</span>
+                        </div>
+                        <a href="/upload-prescription" class="btn-outline-rx">Upload Prescription</a>
+                    </div>
+                </div>
+
+                <!-- Product Card 3 -->
+                <div class="product-card">
+                    <div class="product-img-box">
+                        <img src="https://images.unsplash.com/photo-1550572017-edd951aa8f72?w=300&auto=format&fit=crop&q=80"
+                            alt="Ibuprofen 200mg">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">Ibuprofen 200mg</h3>
+                        <span class="product-brand">Advil / GSK</span>
+                        <div class="product-meta-row">
+                            <span class="product-price">₹120.00</span>
+                            <span class="product-pack">100 Tablets</span>
+                        </div>
+                        <button class="btn-add-cart">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- Product Card 4 -->
+                <div class="product-card">
+                    <div class="product-img-box">
+                        <img src="https://images.unsplash.com/photo-1607613009820-a29f7bb81c04?w=300&auto=format&fit=crop&q=80"
+                            alt="Multivitamin Men's">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">Multivitamin Men's Daily</h3>
+                        <span class="product-brand">Centrum</span>
+                        <div class="product-meta-row">
+                            <span class="product-price">₹499.00</span>
+                            <span class="product-pack">90 Tablets</span>
+                        </div>
+                        <button class="btn-add-cart">Add to Cart</button>
+                    </div>
+                </div>
+
+                <!-- Product Card 5 (Prescription Badge) -->
+                <div class="product-card">
+                    <div class="product-img-box">
+                        <span class="rx-badge"><i class="fa-solid fa-file-prescription"></i> Prescription Required
+                            (Rx)</span>
+                        <img src="https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=80"
+                            alt="Metformin ER">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">Metformin ER 500mg</h3>
+                        <span class="product-brand">Apotex</span>
+                        <div class="product-meta-row">
+                            <span class="product-pack">60 Tablets</span>
+                            <span class="product-pack">60 Tablets</span>
+                        </div>
+                        <a href="/upload-prescription" class="btn-outline-rx">Requires Rx</a>
+                    </div>
+                </div>
+
+                <!-- Product Card 6 -->
+                <div class="product-card">
+                    <div class="product-img-box">
+                        <img src="https://images.unsplash.com/photo-1576602976047-174e57a47881?w=300&auto=format&fit=crop&q=80"
+                            alt="Cough & Cold Syrup">
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">Cough &amp; Cold Syrup 100ml</h3>
+                        <span class="product-brand">Robitussin</span>
+                        <div class="product-meta-row">
+                            <span class="product-price">₹85.00</span>
+                        </div>
+                        <button class="btn-add-cart">Add to Cart</button>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</body>
+
+</html>
