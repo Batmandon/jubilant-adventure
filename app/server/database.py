@@ -1,0 +1,138 @@
+import os
+import psycopg
+
+
+db_host = "localhost"
+db_port = os.getenv("DB_PORT") or "5432"
+db_user = os.getenv("DB_USER") or "postgres"
+db_password = os.environ["DB_PASSWORD"]
+db_name = os.getenv("DB_NAME") or "postgres"
+
+def get_db_connection():
+    return psycopg.connect(
+    host=db_host,
+    port=db_port,
+    user=db_user,
+    password=db_password,
+    dbname=db_name,
+)
+
+def get_db():
+    with get_db_connection() as conn:
+        yield conn
+
+def init_db():
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+    """
+
+    CREATE TABLE IF NOT EXISTS users (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
+        phone TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        role TEXT DEFAULT 'customer' CHECK (role IN ('admin', 'pharmacist', 'customer')),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS categories (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS brands (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS manufacturers (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS suppliers (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE,
+        phone TEXT NOT NULL UNIQUE,
+        gstin TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS salts (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        name TEXT NOT NULL UNIQUE
+    );
+
+    CREATE TABLE IF NOT EXISTS products (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        name TEXT NOT NULL,
+        brand_id BIGINT REFERENCES brands(id),
+        category_id BIGINT REFERENCES categories(id),
+        manufacturer_id BIGINT REFERENCES manufacturers(id),
+        salt_id BIGINT REFERENCES salts(id),
+        strength TEXT,
+        form TEXT NOT NULL CHECK (form IN (
+            'Tablet','Capsule','Syrup','Suspension','Injection',
+            'Ointment','Cream','Gel','Drops','Powder',
+            'Inhaler','Lotion','Other'
+        )),
+        pack_size TEXT,
+        schedule TEXT NOT NULL DEFAULT 'OTC' CHECK (schedule IN ('OTC', 'H', 'H1', 'X')),
+        requires_prescription BOOLEAN GENERATED ALWAYS AS (schedule <> 'OTC') STORED,
+        gst_percent NUMERIC(4,2) NOT NULL DEFAULT 12,
+        hsn_code TEXT,
+        storage_condition TEXT,
+        description TEXT,
+        image_url TEXT,
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        UNIQUE (name, strength, form, pack_size)
+    );
+
+    CREATE TABLE IF NOT EXISTS product_salts (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        product_id BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        salt_id BIGINT NOT NULL REFERENCES salts(id),
+        strength TEXT,
+        UNIQUE (product_id, salt_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS batches (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        product_id BIGINT NOT NULL REFERENCES products(id),
+        batch_no TEXT NOT NULL,
+        mfg_date DATE,
+        expiry_date DATE NOT NULL,
+        quantity INT NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+        purchase_price NUMERIC(10,2) CHECK (purchase_price >= 0 and purchase_price <= mrp),
+        mrp NUMERIC(10,2) CHECK (mrp >= 0),
+        supplier_id BIGINT REFERENCES suppliers(id),
+        rack_location TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        UNIQUE (product_id, batch_no),
+        CHECK (mfg_date IS NULL OR expiry_date > mfg_date)
+    );
+
+    CREATE OR REPLACE FUNCTION set_updated_at()
+    RETURNS trigger AS $$
+    BEGIN
+        NEW.updated_at = now();
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    DROP TRIGGER IF EXISTS trg_products_updated_at ON products;
+
+    CREATE TRIGGER trg_products_updated_at
+    BEFORE UPDATE ON products
+    FOR EACH ROW
+    EXECUTE FUNCTION set_updated_at();
+    """
+)
+ 
+if __name__ == "__main__":
+    init_db()

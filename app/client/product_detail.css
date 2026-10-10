@@ -168,7 +168,6 @@ body {
 }
 
 
-
 /* ==================== PRODUCT DETAIL PAGE (PDP) ==================== */
 .pdp-wrapper {
     max-width: 68rem;
@@ -477,9 +476,6 @@ body {
     font-size: 0.875rem;
     color: #334155;
     line-height: 1.5;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
 }
 
 .warning-list i {
@@ -489,16 +485,20 @@ body {
 
 .side-effects-text {
     font-size: 0.875rem;
-    color: #475569;
 }
 
 /* Responsive Breakdown */
-@media (max-width: 52rem) {
+@media (max-width: 40rem) {
     .pdp-wrapper {
         grid-template-columns: 1fr;
     }
 
     .tab-headers {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1.5fr 1fr 0.8fr;
+    }
+
+    .tab-header-item{
+        font-size: 0.8rem;
+        font-weight: 600;
     }
 }
