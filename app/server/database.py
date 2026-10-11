@@ -1,20 +1,16 @@
-import os
 import psycopg
+from psycopg.rows import dict_row
+from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
 
-
-db_host = "localhost"
-db_port = os.getenv("DB_PORT") or "5432"
-db_user = os.getenv("DB_USER") or "postgres"
-db_password = os.environ["DB_PASSWORD"]
-db_name = os.getenv("DB_NAME") or "postgres"
 
 def get_db_connection():
     return psycopg.connect(
-    host=db_host,
-    port=db_port,
-    user=db_user,
-    password=db_password,
-    dbname=db_name,
+    host=DB_HOST,
+    port=DB_PORT,
+    user=DB_USER,
+    password=DB_PASSWORD,
+    dbname=DB_NAME,
+    row_factory=dict_row
 )
 
 def get_db():

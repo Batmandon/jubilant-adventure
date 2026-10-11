@@ -1,88 +1,136 @@
-"""
-Install:  pip install fastapi uvicorn pyjwt bcrypt "pydantic[email]"
-Run:      JWT_SECRET=$(python -c "import secrets; print(secrets.token_urlsafe(64))") \
-          uvicorn auth:app --reload
-Env vars:
-  JWT_SECRET      (required) long random string
-  COOKIE_SECURE   "true" (default) / "false" -> set false ONLY for local http dev
-"""
-from fastapi import HTTPException, status, Response
+from models.Authmodel import RegisterAccount, LoginCredentials
+from database import get_db
+from utils.utils import hash_password, verify_password
+from services.jwt import create_access_token, create_refresh_token, decode_token
+from fastapi import Response, Request, HTTPException
 import os
-from datetime import datetime, timedelta, timezone
-import bcrypt
-import jwt
 
-# ---------- config ----------
-SECRET_KEY = os.environ.get("JWT_SECRET")
-ALGORITHM = os.environ.get("ALGORITHM")
+IS_PRODUCTION = os.getenv("ENVIRONMENT") == "production"
 
-if not SECRET_KEY:
-    raise RuntimeError("JWT_SECRET env var is required")
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Helperfunction~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-ACCESS_TTL = timedelta(minutes=15)
-REFRESH_TTL = timedelta(days=7)
-COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "true").lower() == "true"
+def get_user(cur, email: str):
+    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+    return cur.fetchone()
 
-ACCESS_COOKIE = "access_token"
-REFRESH_COOKIE = "refresh_token"
+def get_token_from_cookies(request: Request):
+    """Extract token from cookies - use as dependency"""
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return token
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~Auth Operations~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def create_account(Register: RegisterAccount, conn):
+        with conn.cursor() as cur:
+
+            if get_user(cur, Register.email):
+                return {"error": "Account already exists"}
+
+            hashed_password= hash_password(Register.password)
+
+            cur.execute("INSERT INTO users (first_name, last_name, email, phone, password_hash)  VALUES (%s, %s, %s, %s, %s)", (Register.first_name, Register.last_name, Register.email, Register.phone, hashed_password))
+
+            return {"Message": "Account Successfully Created"}
+
+def login_credentials(userlogin: LoginCredentials, conn, response: Response):
+    with conn.cursor() as cur:
+        user = get_user(cur, userlogin.email)
+
+        if not user or not verify_password(userlogin.password, user["password_hash"]):
+            return {"error": "Invalid email or password"}
+
+        token_data = {"sub": user["email"], "name": user["first_name"] + " " + user["last_name"], "role": user["role"]}
+
+        access_token = create_access_token(token_data)
+        refresh_token = create_refresh_token(token_data)
+
+        response.set_cookie(
+            key = "access_token",
+            value = access_token,
+            httponly = True,
+            secure = IS_PRODUCTION, # True for production false for local
+            samesite = "none" if IS_PRODUCTION else "lax", # none for production lax for local
+            max_age = 1800
+            # domain = "127.0.0.1",
+        )
+        response.set_cookie(
+            key = "refresh_token",
+            value = refresh_token,
+            httponly = True,
+            secure = IS_PRODUCTION,
+            samesite = "none" if IS_PRODUCTION else "lax",
+            max_age = 604800
+            # domain = "127.0.0.1",
+        )
+
+        return {"message": "Login successful", "name": user["first_name"] + " " + user["last_name"]}
 
 
-# ---------- password helpers ----------
-def hash_password(pw: str) -> bytes:
-    return bcrypt.hashpw(pw.encode(), bcrypt.gensalt())
+def get_user_info_from_request(request: Request):
+    token = request.cookies.get("access_token")
 
+    if not token:
+        return {"error": "Not authenticated"}
 
-def verify_password(pw: str, hashed: bytes) -> bool:
-    return bcrypt.checkpw(pw.encode(), hashed)
+    payload = decode_token(token, "access")
 
+    if "error" in payload:
+        return payload
 
-# ---------- token helpers ----------
-def create_token(user_id: str, token_type: str, ttl: timedelta) -> str:
-    now = datetime.now(timezone.utc)
-    payload = {
-        "sub": user_id,
-        "type": token_type,
-        "iat": now,
-        "exp": now + ttl,
+    return {
+        "email": payload.get("sub"),
+        "name": payload.get("name"),
+        "role": payload.get("role")
     }
-    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
+def get_user_info_refresh_token (request: Request, response: Response):
+    token = request.cookies.get("refresh_token")
 
-def decode_token(token: str, expected_type: str) -> dict:
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Token expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid token")
-    if payload.get("type") != expected_type:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Wrong token type")
-    return payload
+    if not token:
+        return{"error": "Please Log IN"}
 
+    payload = decode_token(token, "refresh")
 
-# ---------- cookie helpers ----------
-def set_auth_cookies(response: Response, user_id: str) -> None:
+    if "error" in payload:
+        return payload
+
+    email = payload.get("sub")
+    with get_db() as db:
+        user = get_user(db, email)
+
+        if not user:
+            return {"error": "user not found"}
+
+    access_token =  create_access_token({
+        "sub": user["email"],
+        "name": user["first_name"] + " " + user["last_name"],
+        "role": user["role"]
+    })
+
     response.set_cookie(
-        ACCESS_COOKIE,
-        create_token(user_id, "access", ACCESS_TTL),
-        max_age=int(ACCESS_TTL.total_seconds()),
-        httponly=True,
-        secure=COOKIE_SECURE,
-        samesite="lax",
-        path="/",
-    )
-    # Refresh cookie only sent to /auth/* endpoints
-    response.set_cookie(
-        REFRESH_COOKIE,
-        create_token(user_id, "refresh", REFRESH_TTL),
-        max_age=int(REFRESH_TTL.total_seconds()),
-        httponly=True,
-        secure=COOKIE_SECURE,
-        samesite="lax",
-        path="/auth",
+        key = "access_token",
+        value = access_token,
+        httponly = True,
+        secure = True,
+        samesite = "none",
+        max_age = 1800
+
     )
 
+def logout(response: Response):
+    response.delete_cookie(
+        key="access_token",
+        httponly=True,
+        samesite="none",
+        secure=True
+    )
 
-def clear_auth_cookies(response: Response) -> None:
-    response.delete_cookie(ACCESS_COOKIE, path="/")
-    response.delete_cookie(REFRESH_COOKIE, path="/auth")
+    response.delete_cookie(
+        key="refresh_token",
+        httponly=True,
+        samesite="none",
+        secure=True
+    )
+    return {"message": "Logged out successfully"}
