@@ -2,8 +2,8 @@ from fastapi import FastAPI, HTTPException, Depends, Response
 from models.Product_model import AddProduct, UpdateProduct
 from models.Authmodel import RegisterAccount, LoginCredentials
 from database import get_db
-from products import MedicineService
-from auth import create_account, login_credentials
+from routes.products import MedicineService
+from auth import create_account, login_credentials, get_token_from_cookies
 
 app = FastAPI()
 
@@ -22,19 +22,29 @@ def login_user(userlogin: LoginCredentials, response: Response, conn=Depends(get
     return result
 
 @app.post("/products")
-def add_product(product: AddProduct, conn=Depends(get_db)):
+def add_product(product: AddProduct, conn=Depends(get_db), token: str = Depends(get_token_from_cookies)):
     service = MedicineService(conn)
-    service.add_product(product)
-    return {"message": "Product added successfully", "product": product}
+    created_product = service.add_product(product, token)
+    if "error" in created_product:
+        raise HTTPException(status_code=403, detail=created_product["error"])
+    return {
+        "message": "Product added successfully",
+        "product_id": created_product["id"],
+        "product": product,
+    }
 
 @app.put("/products/{product_id}")
-def update_product(product_id: int, product: UpdateProduct, conn=Depends(get_db)):
+def update_product(product_id: int, product: UpdateProduct, conn=Depends(get_db), token: str = Depends(get_token_from_cookies)):
     service = MedicineService(conn)
-    service.update_product(product_id, product)
+    result = service.update_product(product_id, product, token)
+    if  "error" in result:
+        raise HTTPException(status_code=403, detail=result["error"])
     return {"message": "Product updated successfully", "product": product}
 
 @app.delete("/products/{product_id}")
-def delete_product(product_id: int, conn=Depends(get_db)):
+def delete_product(product_id: int, conn=Depends(get_db), token: str = Depends(get_token_from_cookies)):
     service = MedicineService(conn)
-    service.delete_product(product_id)
+    result = service.delete_product(product_id, token)
+    if "error" in result:
+        raise HTTPException(status_code=403, detail=result["error"])
     return {"message": "Product deleted successfully"}

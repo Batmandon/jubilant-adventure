@@ -2,7 +2,7 @@ from models.Authmodel import RegisterAccount, LoginCredentials
 from database import get_db
 from utils.utils import hash_password, verify_password
 from services.jwt import create_access_token, create_refresh_token, decode_token
-from fastapi import Response, Request, HTTPException
+from fastapi import Response, Request, HTTPException, Depends
 import os
 
 IS_PRODUCTION = os.getenv("ENVIRONMENT") == "production"
@@ -12,6 +12,17 @@ IS_PRODUCTION = os.getenv("ENVIRONMENT") == "production"
 def get_user(cur, email: str):
     cur.execute("SELECT * FROM users WHERE email = %s", (email,))
     return cur.fetchone()
+
+def get_current_user(token: str):
+    payload = decode_token(token, "access")
+    if payload is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return payload
+
+def require_admin(user=Depends(get_current_user)):
+    if user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Admin privileges required")
+    return user
 
 def get_token_from_cookies(request: Request):
     """Extract token from cookies - use as dependency"""

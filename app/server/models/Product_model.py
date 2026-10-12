@@ -16,7 +16,7 @@ class AddProduct(BaseModel):
     form: str = Field(max_length=20)
     pack_size: str = Field(max_length=20)
     manufacturer: str = Field(max_length=100)
-    scheduling: str = Field(max_length=10)
+    schedule: str = Field(max_length=10)
     gst_percent: float
     hsn_code: str = Field(max_length=20)
     storage_condition: str = Field(max_length=100)
@@ -38,7 +38,7 @@ class UpdateProduct(BaseModel):
     form: Optional[str] = Field(default=None, max_length=20)
     pack_size: Optional[str] = Field(default=None, max_length=20)
     manufacturer: Optional[str] = Field(default=None, max_length=100)
-    scheduling: Optional[str] = Field(default=None, max_length=10)
+    schedule: Optional[str] = Field(default=None, max_length=10)
     gst_percent: Optional[float] = None
     hsn_code: Optional[str] = Field(default=None, max_length=20)
     storage_condition: Optional[str] = Field(default=None, max_length=100)
