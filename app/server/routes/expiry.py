@@ -1,66 +1,57 @@
-from auth import get_user, get_current_user, require_admin
+class BatchRepository:
+    def __init__(self, conn):
+        self.conn = conn
 
-def get_products_expiry(conn, token: str, page: int, page_size: int):
-    offset = (page - 1) * page_size
-    with conn.cursor() as cur:
-        payload = get_current_user(token)
-        is_admin = require_admin(payload)
+    def list_expiry(self, *, expired: bool, within_days: int = 90,
+                    page: int = 1, page_size: int = 20):
+        page_size = min(page_size, 100)
+        offset = (page - 1) * page_size
 
-        if get_user(cur, payload["sub"]) is None or is_admin["role"] != "admin":
-            return {"error": "Unauthorized access. Admin privileges required."}
+        if expired:
+            cond = "b.expiry_date < CURRENT_DATE"
+            params = ()
+            order = "b.expiry_date DESC, b.id"
+        else:
+            cond = ("b.expiry_date >= CURRENT_DATE "
+                    "AND b.expiry_date <= CURRENT_DATE + %s::int")
+            params = (within_days,)
+            order = "b.expiry_date ASC, b.id"
 
-        cur.execute(
-            """
-            SELECT name, expiry_date, quantity
-            FROM batches left join products p on batches.product_id = p.id
-            WHERE expiry_date < CURRENT_DATE
-            ORDER BY expiry_date ASC, batches.id ASC
-            LIMIT %s OFFSET %s
-            """,
-            (page_size, offset)
-        )
+        base = f"""
+            FROM batches b
+            JOIN products p ON p.id = b.product_id
+            WHERE {cond} AND b.quantity > 0 AND p.is_active = TRUE
+        """
 
-        items = cur.fetchall()
-        cur.execute("SELECT COUNT(*) as total_expired FROM batches WHERE expiry_date < CURRENT_DATE")
-        total_expired = cur.fetchone()["total_expired"]
-        return {"items": items,"page": page, "page_size": page_size, "total_expired": total_expired}
+        with self.conn.cursor() as cur:
+            cur.execute(
+                f"""
+                SELECT p.id AS product_id, p.name, b.id AS batch_id, b.batch_no,
+                       b.expiry_date, b.quantity,
+                       (b.expiry_date - CURRENT_DATE) AS days_left
+                {base}
+                ORDER BY {order}
+                LIMIT %s OFFSET %s
+                """,
+                (*params, page_size, offset),
+            )
+            items = cur.fetchall()
+            for item in items:
+                item["status"] = expiry_status(item["days_left"])
 
+            cur.execute(f"SELECT COUNT(*) AS total {base}", params)
+            total = cur.fetchone()["total"]
 
-def get_nearest_expiry(conn, token: str, page: int, page_size: int):
-    offset = (page - 1) * page_size
-    with conn.cursor() as cur:
-        payload = get_current_user(token)
-        is_admin = require_admin(payload)
-
-        if get_user(cur, payload["sub"]) is None or is_admin["role"] != "admin":
-            return {"error": "Unauthorized access. Admin privileges required."}
-
-        cur.execute(
-            """
-            SELECT name, expiry_date, quantity
-            FROM batches left join products p on batches.product_id = p.id
-            WHERE expiry_date >= CURRENT_DATE
-            ORDER BY expiry_date ASC
-            LIMIT %s OFFSET %s
-            """,
-            (page_size, offset)
-        )
-        items = cur.fetchall()
-        if not items:
-            return {"message": "No products found with nearest expiry dates."}
-
-        cur.execute("SELECT COUNT(*) as total_nearest FROM batches WHERE expiry_date >= CURRENT_DATE")
-        total_nearest = cur.fetchone()["total_nearest"]
-
-        return {"items": items, "page": page, "page_size": page_size, "total_nearest": total_nearest}
+        return {"items": items, "page": page, "page_size": page_size, "total": total}
 
 
-def expiry_status(items: dict):
-    expiry_date = items["expiry_date"]
-    if expiry_date <=90:
-        return "good"
-    elif expiry_date <= 60:
-        return "dangerxone"
-
-    else:
-        return "dangerzone"
+def expiry_status(days_left: int) -> str:
+    if days_left < 0:
+        return "expired"
+    if days_left <= 30:
+        return "critical"
+    if days_left <= 60:
+        return "warning"
+    if days_left <= 90:
+        return "soon"
+    return "ok"
