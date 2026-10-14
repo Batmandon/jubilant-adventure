@@ -13,7 +13,14 @@ def get_user(cur, email: str):
     cur.execute("SELECT * FROM users WHERE email = %s", (email,))
     return cur.fetchone()
 
-def get_current_user(token: str):
+def get_token_from_cookies(request: Request):
+    """Extract the access token from the request cookies."""
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return token
+
+def get_current_user(token: str = Depends(get_token_from_cookies)):
     payload = decode_token(token, "access")
     if payload is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -23,13 +30,6 @@ def require_admin(user=Depends(get_current_user)):
     if user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Admin privileges required")
     return user
-
-def get_token_from_cookies(request: Request):
-    """Extract token from cookies - use as dependency"""
-    token = request.cookies.get("access_token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return token
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~Auth Operations~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

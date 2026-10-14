@@ -1,6 +1,6 @@
 from models.Product_model import AddProduct, UpdateProduct
 from auth import get_user, get_current_user, require_admin
-class MedicineService:
+class ProductRepository:
     def __init__(self, conn):
         self.conn = conn
 
@@ -60,6 +60,8 @@ class MedicineService:
                     product_id
                 )
             )
+            if cur.rowcount == 0:
+                return {"error": f"Product with ID {product_id} does not exist."}
 
     def delete_product(self, product_id: int, token: str):
         with self.conn.cursor() as cur:
@@ -69,8 +71,6 @@ class MedicineService:
             if get_user(cur, payload["sub"]) is None or is_admin["role"] != "admin":
                 return {"error": "Unauthorized access. Admin privileges required."}
 
-            if cur.rowcount == 0:
-                raise ValueError(f"Product with ID {product_id} does not exist.")
             cur.execute(
                 """
                 DELETE FROM products
@@ -78,6 +78,8 @@ class MedicineService:
                 """,
                 (product_id,)
             )
+            if cur.rowcount == 0:
+                return {"error": f"Product with ID {product_id} does not exist."}
 
     def get_product(self, product_id: int):
         with self.conn.cursor() as cur:
@@ -90,12 +92,16 @@ class MedicineService:
             )
             return cur.fetchone()
 
-    def list_products(self):
+    def list_products(self, page: int = 1, page_size: int = 20):
+        offset = (page - 1) * page_size
         with self.conn.cursor() as cur:
             cur.execute(
                 """
                 SELECT * FROM products
-                """
+                ORDER BY id
+                LIMIT %s OFFSET %s
+                """,
+                (page_size, offset),
             )
             return cur.fetchall()
 
