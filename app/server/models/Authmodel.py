@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr, Field
-from datetime import date
 
 class RegisterAccount(BaseModel):
     first_name: str = Field(min_length=3, max_length=20)

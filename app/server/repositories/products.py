@@ -1,5 +1,6 @@
 from models.Product_model import AddProduct, UpdateProduct
-from auth import get_user, get_current_user, require_admin
+
+
 class ProductRepository:
     def __init__(self, conn):
         self.conn = conn

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Query
 from auth import require_admin
 from database import get_db
-from repositories.expiry import BatchRepository
+from repositories.batch import BatchRepository
 
 router = APIRouter(prefix="/admin/expiry", tags=["expiry"], dependencies=[Depends(require_admin)])
 
