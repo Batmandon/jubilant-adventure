@@ -26,10 +26,16 @@ def get_current_user(token: str = Depends(get_token_from_cookies)):
         raise HTTPException(status_code=401, detail="Not authenticated")
     return payload
 
-def require_admin(user=Depends(get_current_user)):
-    if user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Admin privileges required")
-    return user
+def require_admin(user=Depends(get_current_user), conn=Depends(get_db)):
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT role FROM users WHERE email = %s", (user["sub"],))
+        row = cur.fetchone()
+
+        if row is None or row["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Admin privileges required")
+
+        return user
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~Auth Operations~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

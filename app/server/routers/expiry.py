@@ -3,7 +3,7 @@ from auth import require_admin
 from database import get_db
 from repositories.expiry import BatchRepository
 
-router = APIRouter(prefix="/admin/expiry", tags=["expiry"], dependencies=[Depends(require_admin)],)
+router = APIRouter(prefix="/admin/expiry", tags=["expiry"], dependencies=[Depends(require_admin)])
 
 @router.get("/expired")
 def expired(

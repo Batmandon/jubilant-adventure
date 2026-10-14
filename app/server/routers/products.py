@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, Depends, Response, Query
-from auth import require_admin, get_token_from_cookies
+from fastapi import APIRouter, HTTPException, Depends, Query
+from auth import require_admin
 from database import get_db
 from repositories.products import ProductRepository
 from models.Product_model import AddProduct, UpdateProduct
@@ -14,12 +14,9 @@ def list_products(page: int = Query(1, ge=1),
 
 @router.post("", status_code=201)
 def add_product(
-    product: AddProduct,
-    token: str = Depends(get_token_from_cookies),
-    admin=Depends(require_admin),
-    conn=Depends(get_db),
+    product: AddProduct, admin=Depends(require_admin), conn=Depends(get_db),
 ):
-    created_product = ProductRepository(conn).add_product(product, token)
+    created_product = ProductRepository(conn).add_product(product)
     if "error" in created_product:
         raise HTTPException(status_code=403, detail=created_product["error"])
     return {
@@ -29,17 +26,17 @@ def add_product(
     }
 
 @router.put("/{product_id}")
-def update_product(product_id: int, product: UpdateProduct, admin=Depends(require_admin), conn=Depends(get_db), token: str = Depends(get_token_from_cookies)):
+def update_product(product_id: int, product: UpdateProduct, admin=Depends(require_admin), conn=Depends(get_db)):
     service = ProductRepository(conn)
-    result = service.update_product(product_id, product, token)
-    if  "error" in result:
-        raise HTTPException(status_code=403, detail=result["error"])
+    result = service.update_product(product_id, product)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
     return {"message": "Product updated successfully", "product": product}
 
 @router.delete("/{product_id}")
-def delete_product(product_id: int, admin=Depends(require_admin), conn=Depends(get_db), token: str = Depends(get_token_from_cookies)):
+def delete_product(product_id: int, admin=Depends(require_admin), conn=Depends(get_db)):
     service = ProductRepository(conn)
-    result = service.delete_product(product_id, token)
+    result = service.delete_product(product_id)
     if "error" in result:
-        raise HTTPException(status_code=403, detail=result["error"])
+        raise HTTPException(status_code=404, detail=result["error"])
     return {"message": "Product deleted successfully"}

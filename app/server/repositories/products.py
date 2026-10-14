@@ -4,14 +4,8 @@ class ProductRepository:
     def __init__(self, conn):
         self.conn = conn
 
-    def add_product(self, product: AddProduct, token: str):
+    def add_product(self, product: AddProduct):
         with self.conn.cursor() as cur:
-            payload = get_current_user(token)
-            is_admin = require_admin(payload)
-
-            if get_user(cur, payload["sub"]) is None or is_admin["role"] != "admin":
-                return {"error": "Unauthorized access. Admin privileges required."}
-
             cur.execute(
                 """
                 INSERT INTO products (name, strength, form, pack_size, schedule, gst_percent, hsn_code, storage_condition, description, image_url)
@@ -33,13 +27,8 @@ class ProductRepository:
             )
             return {"id": cur.fetchone()["id"]}
 
-    def update_product(self, product_id: int, product: UpdateProduct, token: str):
+    def update_product(self, product_id: int, product: UpdateProduct):
         with self.conn.cursor() as cur:
-            payload = get_current_user(token)
-            is_admin = require_admin(payload)
-            if get_user(cur, payload["sub"]) is None or is_admin["role"] != "admin":
-                return {"error": "Unauthorized access. Admin privileges required."}
-
             cur.execute(
                 """
                 UPDATE products
@@ -62,15 +51,10 @@ class ProductRepository:
             )
             if cur.rowcount == 0:
                 return {"error": f"Product with ID {product_id} does not exist."}
+            return {"updated": True}
 
-    def delete_product(self, product_id: int, token: str):
+    def delete_product(self, product_id: int):
         with self.conn.cursor() as cur:
-            payload = get_current_user(token)
-            is_admin = require_admin(payload)
-
-            if get_user(cur, payload["sub"]) is None or is_admin["role"] != "admin":
-                return {"error": "Unauthorized access. Admin privileges required."}
-
             cur.execute(
                 """
                 DELETE FROM products
@@ -80,6 +64,7 @@ class ProductRepository:
             )
             if cur.rowcount == 0:
                 return {"error": f"Product with ID {product_id} does not exist."}
+            return {"deleted": True}
 
     def get_product(self, product_id: int):
         with self.conn.cursor() as cur:
