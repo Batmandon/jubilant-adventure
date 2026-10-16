@@ -113,6 +113,58 @@ def init_db():
         CHECK (mfg_date IS NULL OR expiry_date > mfg_date)
     );
 
+    CREATE TABLE IF NOT EXISTS addresses (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        line TEXT NOT NULL,
+        city TEXT NOT NULL,
+        pincode TEXT NOT NULL,
+        phone TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS cart_items (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        product_id BIGINT NOT NULL REFERENCES products(id),
+        quantity INT NOT NULL CHECK (quantity > 0),
+        UNIQUE (user_id, product_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS orders (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        user_id BIGINT NOT NULL REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'pending'
+            CHECK (status IN (
+                'pending', 'confirmed', 'processing', 'shipped',
+                'delivered', 'cancelled'
+            )),
+        address JSONB NOT NULL,
+        total NUMERIC(12, 2) NOT NULL CHECK (total >= 0),
+        payment_method TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
+    CREATE TABLE IF NOT EXISTS order_items (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        order_id BIGINT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+        product_id BIGINT NOT NULL REFERENCES products(id),
+        batch_id BIGINT NOT NULL REFERENCES batches(id),
+        quantity INT NOT NULL CHECK (quantity > 0),
+        unit_price NUMERIC(10, 2) NOT NULL CHECK (unit_price >= 0)
+    );
+
+    CREATE TABLE IF NOT EXISTS prescriptions (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        user_id BIGINT NOT NULL REFERENCES users(id),
+        file_path TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending'
+            CHECK (status IN ('pending', 'approved', 'rejected')),
+        reviewed_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+        reviewed_at TIMESTAMPTZ,
+        reject_reason TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+
     CREATE OR REPLACE FUNCTION set_updated_at()
     RETURNS trigger AS $$
     BEGIN
