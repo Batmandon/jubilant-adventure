@@ -3,6 +3,23 @@ from pydantic import ValidationError
 from models.Batch_model import CreateBatch, EditBatch
 
 
+STOCK_ALERT_THRESHOLDS = {
+    "Tablet": 5,
+    "Capsule": 5,
+    "Syrup": 10,
+    "Suspension": 10,
+    "Injection": 5,
+    "Ointment": 5,
+    "Cream": 5,
+    "Gel": 5,
+    "Drops": 3,
+    "Powder": 3,
+    "Inhaler": 3,
+    "Lotion": 3,
+    "Other": 3,
+}
+
+
 class BatchRepository:
     def __init__(self, conn):
         self.conn = conn
@@ -132,6 +149,41 @@ class BatchRepository:
                     "status_code": 404,
                 }
             return {"deleted": True}
+
+    def list_stock_alerts(self):
+        threshold_rows = ", ".join(["(%s, %s)"] * len(STOCK_ALERT_THRESHOLDS))
+        threshold_params = tuple(
+            value
+            for form, threshold in STOCK_ALERT_THRESHOLDS.items()
+            for value in (form, threshold)
+        )
+
+        with self.conn.cursor() as cur:
+            cur.execute(
+                f"""
+                WITH stock_thresholds(form, alert_threshold) AS (
+                    VALUES {threshold_rows}
+                ),
+                product_stock AS (
+                    SELECT p.id AS product_id, p.name, p.form,
+                           COALESCE(SUM(b.quantity), 0)::int AS current_stock,
+                           st.alert_threshold
+                    FROM products p
+                    JOIN stock_thresholds st ON st.form = p.form
+                    LEFT JOIN batches b
+                        ON b.product_id = p.id
+                        AND b.expiry_date >= CURRENT_DATE
+                    WHERE p.is_active = TRUE
+                    GROUP BY p.id, p.name, p.form, st.alert_threshold
+                )
+                SELECT product_id, name, form, current_stock, alert_threshold
+                FROM product_stock
+                WHERE current_stock <= alert_threshold
+                ORDER BY current_stock, name, product_id
+                """,
+                threshold_params,
+            )
+            return cur.fetchall()
 
     def list_expiry(self, *, expired: bool, within_days: int = 90,
                     page: int = 1, page_size: int = 20):

@@ -44,3 +44,8 @@ def delete_batch(batch_id: int, conn=Depends(get_db)):
             detail=result["error"],
         )
     return {"message": "Batch deleted successfully"}
+
+
+@router.get("/stock-alerts")
+def list_stock_alerts(conn=Depends(get_db)):
+    return BatchRepository(conn).list_stock_alerts()
