@@ -1,6 +1,20 @@
 from models.Product_model import AddProduct, UpdateProduct
 
 
+PRODUCT_PUBLIC_COLUMNS = (
+    "id",
+    "name",
+    "strength",
+    "form",
+    "pack_size",
+    "schedule",
+    "gst_percent",
+    "storage_condition",
+    "description",
+    "image_url",
+)
+
+
 class ProductRepository:
     def __init__(self, conn):
         self.conn = conn
@@ -70,8 +84,9 @@ class ProductRepository:
     def get_product(self, product_id: int):
         with self.conn.cursor() as cur:
             cur.execute(
-                """
-                SELECT * FROM products
+                f"""
+                SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
+                FROM products
                 WHERE id = %s
                 """,
                 (product_id,)
@@ -82,8 +97,9 @@ class ProductRepository:
         offset = (page - 1) * page_size
         with self.conn.cursor() as cur:
             cur.execute(
-                """
-                SELECT * FROM products
+                f"""
+                SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
+                FROM products
                 ORDER BY id
                 LIMIT %s OFFSET %s
                 """,
@@ -94,8 +110,9 @@ class ProductRepository:
     def search_products(self, name: str):
         with self.conn.cursor() as cur:
             cur.execute(
-                """
-                SELECT * FROM products
+                f"""
+                SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
+                FROM products
                 WHERE name ILIKE %s
                 """,
                 (f"%{name}%",)
@@ -105,8 +122,9 @@ class ProductRepository:
     def get_products_by_category(self, category_id: int):
         with self.conn.cursor() as cur:
             cur.execute(
-                """
-                SELECT * FROM products
+                f"""
+                SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
+                FROM products
                 WHERE category_id = %s
                 """,
                 (category_id,)
@@ -116,8 +134,9 @@ class ProductRepository:
     def get_products_by_brand(self, brand_id: int):
         with self.conn.cursor() as cur:
             cur.execute(
-                """
-                SELECT * FROM products
+                f"""
+                SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
+                FROM products
                 WHERE brand_id = %s
                 """,
                 (brand_id,)
