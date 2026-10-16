@@ -14,6 +14,16 @@ PRODUCT_PUBLIC_COLUMNS = (
     "image_url",
 )
 
+PRODUCT_IN_STOCK_CONDITION = """
+    EXISTS (
+        SELECT 1
+        FROM batches b
+        WHERE b.product_id = products.id
+          AND b.quantity > 0
+          AND b.expiry_date >= CURRENT_DATE
+    )
+"""
+
 
 class ProductRepository:
     def __init__(self, conn):
@@ -88,6 +98,7 @@ class ProductRepository:
                 SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
                 FROM products
                 WHERE id = %s
+                  AND {PRODUCT_IN_STOCK_CONDITION}
                 """,
                 (product_id,)
             )
@@ -100,6 +111,7 @@ class ProductRepository:
                 f"""
                 SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
                 FROM products
+                WHERE {PRODUCT_IN_STOCK_CONDITION}
                 ORDER BY id
                 LIMIT %s OFFSET %s
                 """,
@@ -114,6 +126,7 @@ class ProductRepository:
                 SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
                 FROM products
                 WHERE name ILIKE %s
+                  AND {PRODUCT_IN_STOCK_CONDITION}
                 """,
                 (f"%{name}%",)
             )
@@ -126,6 +139,7 @@ class ProductRepository:
                 SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
                 FROM products
                 WHERE category_id = %s
+                  AND {PRODUCT_IN_STOCK_CONDITION}
                 """,
                 (category_id,)
             )
@@ -138,6 +152,7 @@ class ProductRepository:
                 SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
                 FROM products
                 WHERE brand_id = %s
+                  AND {PRODUCT_IN_STOCK_CONDITION}
                 """,
                 (brand_id,)
             )
