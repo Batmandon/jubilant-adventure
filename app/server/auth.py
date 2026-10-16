@@ -1,16 +1,41 @@
 from models.Authmodel import RegisterAccount, LoginCredentials
-from database import get_db
+from database import get_db, get_db_connection
 from utils.utils import hash_password, verify_password
 from services.jwt import create_access_token, create_refresh_token, decode_token
 from fastapi import Response, Request, HTTPException, Depends
 import os
+from typing import Literal
 
 IS_PRODUCTION = os.getenv("ENVIRONMENT") == "production"
+USER_COLUMNS = frozenset(
+    {
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+        "phone",
+        "password_hash",
+        "role",
+        "created_at",
+        "updated_at",
+    }
+)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Helperfunction~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def get_user(cur, email: str):
-    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+def get_user(cur, email: str, columns: tuple[str, ...] | Literal["*"] = "*"):
+    if columns == "*":
+        selected_columns = "*"
+    else:
+        invalid_columns = set(columns) - USER_COLUMNS
+        if not columns or invalid_columns:
+            raise ValueError(f"Invalid user columns: {sorted(invalid_columns)}")
+        selected_columns = ", ".join(columns)
+
+    cur.execute(
+        f"SELECT {selected_columns} FROM users WHERE email = %s",
+        (email,),
+    )
     return cur.fetchone()
 
 def get_token_from_cookies(request: Request):
@@ -28,9 +53,7 @@ def get_current_user(token: str = Depends(get_token_from_cookies)):
 
 def require_admin(user=Depends(get_current_user), conn=Depends(get_db)):
     with conn.cursor() as cur:
-        cur.execute(
-            "SELECT role FROM users WHERE email = %s", (user["sub"],))
-        row = cur.fetchone()
+        row = get_user(cur, user["sub"], ("role",))
 
         if row is None or row["role"] != "admin":
             raise HTTPException(status_code=403, detail="Admin privileges required")
@@ -42,7 +65,7 @@ def require_admin(user=Depends(get_current_user), conn=Depends(get_db)):
 def create_account(Register: RegisterAccount, conn):
         with conn.cursor() as cur:
 
-            if get_user(cur, Register.email):
+            if get_user(cur, Register.email, ("id",)):
                 return {"error": "Account already exists"}
 
             hashed_password= hash_password(Register.password)
@@ -53,7 +76,11 @@ def create_account(Register: RegisterAccount, conn):
 
 def login_credentials(userlogin: LoginCredentials, conn, response: Response):
     with conn.cursor() as cur:
-        user = get_user(cur, userlogin.email)
+        user = get_user(
+            cur,
+            userlogin.email,
+            ("email", "first_name", "last_name", "role", "password_hash"),
+        )
 
         if not user or not verify_password(userlogin.password, user["password_hash"]):
             return {"error": "Invalid email or password"}
@@ -114,11 +141,16 @@ def get_user_info_refresh_token (request: Request, response: Response):
         return payload
 
     email = payload.get("sub")
-    with get_db() as db:
-        user = get_user(db, email)
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            user = get_user(
+                cur,
+                email,
+                ("email", "first_name", "last_name", "role"),
+            )
 
-        if not user:
-            return {"error": "user not found"}
+            if not user:
+                return {"error": "user not found"}
 
     access_token =  create_access_token({
         "sub": user["email"],

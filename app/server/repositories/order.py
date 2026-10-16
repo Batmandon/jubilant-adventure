@@ -1,11 +1,13 @@
+from auth import get_user
+
+
 class OrderRepository:
     def __init__(self, conn):
         self.conn = conn
 
     def get_user_id(self, email: str):
         with self.conn.cursor() as cur:
-            cur.execute("SELECT id FROM users WHERE email = %s", (email,))
-            user = cur.fetchone()
+            user = get_user(cur, email, ("id",))
             return user["id"] if user is not None else None
 
     def add_cart_item(self, user_id: int, product_id: int, quantity: int):
