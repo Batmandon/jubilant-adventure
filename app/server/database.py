@@ -64,11 +64,11 @@ def init_db():
 
     CREATE TABLE IF NOT EXISTS products (
         id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-        name TEXT NOT NULL,
         brand_id BIGINT REFERENCES brands(id),
         category_id BIGINT REFERENCES categories(id),
         manufacturer_id BIGINT REFERENCES manufacturers(id),
         salt_id BIGINT REFERENCES salts(id),
+        name TEXT NOT NULL,
         strength TEXT,
         form TEXT NOT NULL CHECK (form IN (
             'Tablet','Capsule','Syrup','Suspension','Injection',
