@@ -1,4 +1,3 @@
-from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Literal
@@ -57,15 +56,6 @@ class CustomerPrescription(BaseModel):
         if image_format != expected_format:
             raise ValueError("Image content does not match its file extension")
         return expected_format
-
-
-class AdminPrescriptionResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    status: Literal["pending", "approved", "rejected"]
-    reviewed_by: int | None
-    reviewed_at: datetime | None
-    reject_reason: str | None
 
 
 class AdminPrescriptionReview(BaseModel):

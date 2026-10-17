@@ -16,7 +16,6 @@ from pydantic import ValidationError
 from auth import get_current_user, require_admin
 from database import get_db
 from models.Prescription_model import (
-    AdminPrescriptionResponse,
     AdminPrescriptionReview,
     CustomerPrescription,
     MAX_PRESCRIPTION_SIZE,
@@ -77,10 +76,7 @@ async def upload_prescription(
     }
 
 
-@router.patch(
-    "/{prescription_id}/review",
-    response_model=AdminPrescriptionResponse,
-)
+@router.patch("/{prescription_id}/review")
 def review_prescription(
     review: AdminPrescriptionReview,
     prescription_id: int = PathParameter(ge=1),
