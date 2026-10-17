@@ -1,4 +1,5 @@
 from auth import get_user
+from models.Prescription_model import AdminPrescriptionReview
 
 
 class PrescriptionRepository:
@@ -21,3 +22,42 @@ class PrescriptionRepository:
                 (user_id, file_path),
             )
             return cur.fetchone()
+
+    def review_prescription(
+        self,
+        prescription_id: int,
+        reviewer_email: str,
+        review: AdminPrescriptionReview,
+    ):
+        with self.conn.cursor() as cur:
+            reviewer = get_user(cur, reviewer_email, ("id",))
+            if reviewer is None:
+                return {
+                    "error": "Authenticated admin no longer exists.",
+                    "status_code": 401,
+                }
+
+            cur.execute(
+                """
+                UPDATE prescriptions
+                SET status = %s,
+                    reviewed_by = %s,
+                    reviewed_at = now(),
+                    reject_reason = %s
+                WHERE id = %s
+                RETURNING status, reviewed_by, reviewed_at, reject_reason
+                """,
+                (
+                    review.status,
+                    reviewer["id"],
+                    review.reject_reason,
+                    prescription_id,
+                ),
+            )
+            result = cur.fetchone()
+            if result is None:
+                return {
+                    "error": f"Prescription with ID {prescription_id} does not exist.",
+                    "status_code": 404,
+                }
+            return result

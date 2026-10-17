@@ -2,12 +2,22 @@ from pathlib import Path
 from uuid import uuid4
 
 import psycopg
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Path as PathParameter,
+    UploadFile,
+    status,
+)
 from pydantic import ValidationError
 
-from auth import get_current_user
+from auth import get_current_user, require_admin
 from database import get_db
 from models.Prescription_model import (
+    AdminPrescriptionResponse,
+    AdminPrescriptionReview,
     CustomerPrescription,
     MAX_PRESCRIPTION_SIZE,
 )
@@ -65,3 +75,26 @@ async def upload_prescription(
         "message": "Prescription uploaded successfully",
         "prescription": prescription,
     }
+
+
+@router.patch(
+    "/{prescription_id}/review",
+    response_model=AdminPrescriptionResponse,
+)
+def review_prescription(
+    review: AdminPrescriptionReview,
+    prescription_id: int = PathParameter(ge=1),
+    admin=Depends(require_admin),
+    conn=Depends(get_db),
+):
+    result = PrescriptionRepository(conn).review_prescription(
+        prescription_id,
+        admin["sub"],
+        review,
+    )
+    if "error" in result:
+        raise HTTPException(
+            status_code=result["status_code"],
+            detail=result["error"],
+        )
+    return result

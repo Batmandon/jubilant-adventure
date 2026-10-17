@@ -5,7 +5,7 @@ from typing import Literal
 
 from fastapi import UploadFile
 from PIL import Image, UnidentifiedImageError
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 MAX_PRESCRIPTION_SIZE = 5 * 1024 * 1024
 PRESCRIPTION_IMAGE_TYPES = {
@@ -66,3 +66,18 @@ class AdminPrescriptionResponse(BaseModel):
     reviewed_by: int | None
     reviewed_at: datetime | None
     reject_reason: str | None
+
+
+class AdminPrescriptionReview(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    status: Literal["approved", "rejected"]
+    reject_reason: str | None = Field(default=None, max_length=500)
+
+    @model_validator(mode="after")
+    def validate_review(self):
+        if self.status == "rejected" and not self.reject_reason:
+            raise ValueError("reject_reason is required when rejecting a prescription")
+        if self.status == "approved" and self.reject_reason is not None:
+            raise ValueError("reject_reason must be omitted when approving a prescription")
+        return self
