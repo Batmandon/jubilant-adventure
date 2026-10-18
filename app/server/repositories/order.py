@@ -1,4 +1,39 @@
 from auth import get_user
+from decimal import Decimal
+
+# Schedules that need a prescription. Orders with these are blocked until the
+# prescription flow is built.
+RX_SCHEDULES = {"H", "H1", "X"}
+
+
+class OrderError(Exception):
+    """Base class for expected order problems. The router maps these to HTTP errors."""
+
+
+class AddressNotFound(OrderError):
+    pass
+
+
+class EmptyCart(OrderError):
+    pass
+
+
+class OutOfStock(OrderError):
+    def __init__(self, product_name: str):
+        super().__init__(product_name)
+        self.product_name = product_name
+
+
+class MissingBatchPrice(OrderError):
+    def __init__(self, product_name: str):
+        super().__init__(product_name)
+        self.product_name = product_name
+
+
+class PrescriptionRequired(OrderError):
+    def __init__(self, product_name: str):
+        super().__init__(product_name)
+        self.product_name = product_name
 
 
 class OrderRepository:
@@ -71,3 +106,173 @@ class OrderRepository:
                 (user_id, product_id, quantity),
             )
             return cur.fetchone()
+
+    def place_order(self, user_id: int, address_id: int, payment_method: str) -> dict:
+        # Everything below is one transaction: if anything raises, nothing is saved.
+        with self.conn.transaction():
+            with self.conn.cursor() as cur:
+                # 1. Address must belong to this user
+                cur.execute(
+                    """
+                    SELECT line, city, pincode, phone
+                    FROM addresses
+                    WHERE id = %s AND user_id = %s
+                    """,
+                    (address_id, user_id),
+                )
+                addr = cur.fetchone()
+                if addr is None:
+                    raise AddressNotFound()
+
+                # 2. Read the cart (ORDER BY product_id keeps lock order consistent)
+                cur.execute(
+                    """
+                    SELECT c.product_id, c.quantity, p.name, p.schedule, p.is_active
+                    FROM cart_items c
+                    JOIN products p ON p.id = c.product_id
+                    WHERE c.user_id = %s
+                    ORDER BY c.product_id
+                    """,
+                    (user_id,),
+                )
+                cart = cur.fetchall()
+                if not cart:
+                    raise EmptyCart()
+
+                # 3. Pick batches (earliest expiry first) and lock them
+                lines = []  # (product_id, batch_id, quantity, unit_price)
+                total = Decimal("0")
+
+                for item in cart:
+                    if not item["is_active"]:
+                        raise OutOfStock(item["name"])
+                    if item["schedule"] in RX_SCHEDULES:
+                        raise PrescriptionRequired(item["name"])
+
+                    needed = item["quantity"]
+                    cur.execute(
+                        """
+                        SELECT id, quantity, mrp
+                        FROM batches
+                        WHERE product_id = %s
+                          AND quantity > 0
+                          AND expiry_date >= CURRENT_DATE
+                        ORDER BY expiry_date, id
+                        FOR UPDATE
+                        """,
+                        (item["product_id"],),
+                    )
+                    for batch in cur.fetchall():
+                        if batch["mrp"] is None:
+                            raise MissingBatchPrice(item["name"])
+                        take = min(needed, batch["quantity"])
+                        lines.append((item["product_id"], batch["id"], take, batch["mrp"]))
+                        total += batch["mrp"] * take
+                        needed -= take
+                        if needed == 0:
+                            break
+
+                    if needed > 0:
+                        raise OutOfStock(item["name"])
+
+                # 4. Insert the order (address copied as a snapshot)
+                cur.execute(
+                    """
+                    INSERT INTO orders (user_id, status, address, total, payment_method)
+                    VALUES (
+                        %s,
+                        'pending',
+                        jsonb_build_object(
+                            'line', %s::text,
+                            'city', %s::text,
+                            'pincode', %s::text,
+                            'phone', %s::text
+                        ),
+                        %s,
+                        %s
+                    )
+                    RETURNING id
+                    """,
+                    (
+                        user_id,
+                        addr["line"],
+                        addr["city"],
+                        addr["pincode"],
+                        addr["phone"],
+                        total,
+                        payment_method,
+                    ),
+                )
+                order_id = cur.fetchone()["id"]
+
+                # 5. Insert order_items with the price frozen at order time
+                cur.executemany(
+                    """
+                    INSERT INTO order_items (order_id, product_id, batch_id, quantity, unit_price)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    [(order_id, pid, bid, qty, price) for pid, bid, qty, price in lines],
+                )
+
+                # 6. Deduct stock from the locked batches
+                cur.executemany(
+                    "UPDATE batches SET quantity = quantity - %s WHERE id = %s",
+                    [(qty, bid) for _, bid, qty, _ in lines],
+                )
+
+                # 7. Empty the cart
+                cur.execute("DELETE FROM cart_items WHERE user_id = %s", (user_id,))
+
+        return {"order_id": order_id, "total": total}
+
+    def list_orders(self, user_id: int, page: int = 1, page_size: int = 20) -> dict:
+        offset = (page - 1) * page_size
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, status, total, payment_method, created_at
+                FROM orders
+                WHERE user_id = %s
+                ORDER BY created_at DESC, id DESC
+                LIMIT %s OFFSET %s
+                """,
+                (user_id, page_size, offset),
+            )
+            items = cur.fetchall()
+
+            cur.execute(
+                "SELECT COUNT(*) AS total FROM orders WHERE user_id = %s",
+                (user_id,),
+            )
+            total = cur.fetchone()["total"]
+
+        return {"items": items, "page": page, "page_size": page_size, "total": total}
+
+    def get_order(self, order_id: int, user_id: int):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, status, address, total, payment_method, created_at
+                FROM orders
+                WHERE id = %s AND user_id = %s
+                """,
+                (order_id, user_id),
+            )
+            order = cur.fetchone()
+            if order is None:
+                return None
+
+            cur.execute(
+                """
+                SELECT p.name, b.batch_no, oi.quantity, oi.unit_price
+                FROM order_items oi
+                JOIN products p ON p.id = oi.product_id
+                JOIN batches b ON b.id = oi.batch_id
+                WHERE oi.order_id = %s
+                ORDER BY oi.id
+                """,
+                (order_id,),
+            )
+            order["items"] = cur.fetchall()
+
+        return order
