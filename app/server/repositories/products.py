@@ -1,5 +1,5 @@
 from models.Product_model import AddProduct, UpdateProduct
-
+from repositories.pricing import selling_price
 
 PRODUCT_PUBLIC_COLUMNS = (
     "id",
@@ -14,6 +14,8 @@ PRODUCT_PUBLIC_COLUMNS = (
     "image_url",
 )
 
+SELLABLE_BATCH_CONDITION = "quantity > 0 AND expiry_date > CURRENT_DATE"
+
 PRODUCT_IN_STOCK_CONDITION = """
     EXISTS (
         SELECT 1
@@ -23,7 +25,6 @@ PRODUCT_IN_STOCK_CONDITION = """
           AND b.expiry_date >= CURRENT_DATE
     )
 """
-
 
 class ProductRepository:
     def __init__(self, conn):
@@ -106,18 +107,45 @@ class ProductRepository:
 
     def list_products(self, page: int = 1, page_size: int = 20):
         offset = (page - 1) * page_size
+        columns = ", ".join(f"p.{c}" for c in PRODUCT_PUBLIC_COLUMNS)
+
         with self.conn.cursor() as cur:
             cur.execute(
                 f"""
-                SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
-                FROM products
-                WHERE {PRODUCT_IN_STOCK_CONDITION}
-                ORDER BY id
+                SELECT {columns}, b.mrp, b.discount_percent
+                FROM products p
+                JOIN LATERAL (
+                    SELECT mrp, discount_percent
+                    FROM batches
+                    WHERE product_id = p.id AND {SELLABLE_BATCH_CONDITION}
+                    ORDER BY expiry_date, id
+                    LIMIT 1
+                ) b ON TRUE
+                WHERE p.is_active = TRUE
+                ORDER BY p.name, p.id
                 LIMIT %s OFFSET %s
                 """,
                 (page_size, offset),
             )
-            return cur.fetchall()
+            items = cur.fetchall()
+
+            cur.execute(
+                f"""
+                SELECT COUNT(*) AS total
+                FROM products p
+                WHERE p.is_active = TRUE
+                AND EXISTS (
+                    SELECT 1 FROM batches
+                    WHERE product_id = p.id AND {SELLABLE_BATCH_CONDITION}
+                )
+                """
+            )
+            total = cur.fetchone()["total"]
+
+        for item in items:
+            item["selling_price"] = selling_price(item["mrp"], item["discount_percent"])
+
+        return {"items": items, "page": page, "page_size": page_size, "total": total}
 
     def search_products(self, name: str):
         with self.conn.cursor() as cur:

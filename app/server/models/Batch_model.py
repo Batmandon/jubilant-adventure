@@ -14,6 +14,7 @@ class CreateBatch(BaseModel):
     quantity: int = Field(ge=0)
     purchase_price: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
     mrp: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
+    discount_percent: Decimal = Field(default=0, ge=0, le=100, max_digits=5, decimal_places=2)
     supplier_id: int | None = Field(default=None, gt=0)
     rack_location: str | None = Field(default=None, max_length=100)
 
@@ -40,6 +41,9 @@ class EditBatch(BaseModel):
     quantity: int | None = Field(default=None, ge=0)
     purchase_price: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
     mrp: Decimal | None = Field(default=None, ge=0, max_digits=10, decimal_places=2)
+    discount_percent: Decimal | None = Field(
+        default=None, ge=0, le=100, max_digits=5, decimal_places=2
+    )
     supplier_id: int | None = Field(default=None, gt=0)
     rack_location: str | None = Field(default=None, max_length=100)
 
@@ -55,6 +59,8 @@ class EditBatch(BaseModel):
             raise ValueError("batch_no cannot be null")
         if "quantity" in self.model_fields_set and self.quantity is None:
             raise ValueError("quantity cannot be null")
+        if "discount_percent" in self.model_fields_set and self.discount_percent is None:
+            raise ValueError("discount_percent cannot be null")
         if (
             self.mfg_date is not None
             and self.expiry_date is not None

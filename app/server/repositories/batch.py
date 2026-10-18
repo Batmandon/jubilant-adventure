@@ -58,9 +58,9 @@ class BatchRepository:
                 """
                 INSERT INTO batches (
                     product_id, batch_no, mfg_date, expiry_date, quantity,
-                    purchase_price, mrp, supplier_id, rack_location
+                    purchase_price, mrp, discount_percent, supplier_id, rack_location
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
                 """,
                 (
@@ -71,6 +71,7 @@ class BatchRepository:
                     batch.quantity,
                     batch.purchase_price,
                     batch.mrp,
+                    batch.discount_percent,
                     batch.supplier_id,
                     batch.rack_location,
                 ),
@@ -83,7 +84,7 @@ class BatchRepository:
             cur.execute(
                 """
                 SELECT product_id, batch_no, mfg_date, expiry_date, quantity,
-                       purchase_price, mrp, supplier_id, rack_location
+                       purchase_price, mrp, discount_percent, supplier_id, rack_location
                 FROM batches
                 WHERE id = %s
                 FOR UPDATE

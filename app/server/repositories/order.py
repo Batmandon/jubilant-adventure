@@ -1,5 +1,6 @@
 from auth import get_user
 from decimal import Decimal
+from repositories.pricing import selling_price
 
 # Schedules that need a prescription. Orders with these are blocked until the
 # prescription flow is built.
@@ -152,7 +153,7 @@ class OrderRepository:
                     needed = item["quantity"]
                     cur.execute(
                         """
-                        SELECT id, quantity, mrp
+                        SELECT id, quantity, mrp, discount_percent
                         FROM batches
                         WHERE product_id = %s
                           AND quantity > 0
@@ -165,9 +166,19 @@ class OrderRepository:
                     for batch in cur.fetchall():
                         if batch["mrp"] is None:
                             raise MissingBatchPrice(item["name"])
+                        sp = selling_price(batch["mrp"], batch["discount_percent"])
                         take = min(needed, batch["quantity"])
-                        lines.append((item["product_id"], batch["id"], take, batch["mrp"]))
-                        total += batch["mrp"] * take
+                        lines.append(
+                            (
+                                item["product_id"],
+                                batch["id"],
+                                take,
+                                sp,
+                                batch["mrp"],
+                                batch["discount_percent"],
+                            )
+                        )
+                        total += sp * take
                         needed -= take
                         if needed == 0:
                             break
@@ -208,16 +219,32 @@ class OrderRepository:
                 # 5. Insert order_items with the price frozen at order time
                 cur.executemany(
                     """
-                    INSERT INTO order_items (order_id, product_id, batch_id, quantity, unit_price)
-                    VALUES (%s, %s, %s, %s, %s)
+                    INSERT INTO order_items (
+                        order_id, product_id, batch_id, quantity, unit_price,
+                        mrp, discount_percent
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                     """,
-                    [(order_id, pid, bid, qty, price) for pid, bid, qty, price in lines],
+                    [
+                        (order_id, product_id, batch_id, quantity, price, mrp, discount)
+                        for (
+                            product_id,
+                            batch_id,
+                            quantity,
+                            price,
+                            mrp,
+                            discount,
+                        ) in lines
+                    ],
                 )
 
                 # 6. Deduct stock from the locked batches
                 cur.executemany(
                     "UPDATE batches SET quantity = quantity - %s WHERE id = %s",
-                    [(qty, bid) for _, bid, qty, _ in lines],
+                    [
+                        (quantity, batch_id)
+                        for _, batch_id, quantity, _, _, _ in lines
+                    ],
                 )
 
                 # 7. Empty the cart
@@ -264,7 +291,8 @@ class OrderRepository:
 
             cur.execute(
                 """
-                SELECT p.name, b.batch_no, oi.quantity, oi.unit_price
+                SELECT p.name, b.batch_no, oi.quantity, oi.unit_price,
+                       oi.mrp, oi.discount_percent
                 FROM order_items oi
                 JOIN products p ON p.id = oi.product_id
                 JOIN batches b ON b.id = oi.batch_id

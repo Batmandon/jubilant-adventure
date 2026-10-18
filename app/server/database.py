@@ -106,12 +106,18 @@ def init_db():
         quantity INT NOT NULL DEFAULT 0 CHECK (quantity >= 0),
         purchase_price NUMERIC(10,2) CHECK (purchase_price >= 0 and purchase_price <= mrp),
         mrp NUMERIC(10,2) CHECK (mrp >= 0),
+        discount_percent NUMERIC(5,2) NOT NULL DEFAULT 0
+            CHECK (discount_percent BETWEEN 0 AND 100),
         supplier_id BIGINT REFERENCES suppliers(id),
         rack_location TEXT,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
         UNIQUE (product_id, batch_no),
         CHECK (mfg_date IS NULL OR expiry_date > mfg_date)
     );
+
+    ALTER TABLE batches
+        ADD COLUMN IF NOT EXISTS discount_percent NUMERIC(5,2) NOT NULL DEFAULT 0
+        CHECK (discount_percent BETWEEN 0 AND 100);
 
     CREATE TABLE IF NOT EXISTS addresses (
         id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -150,8 +156,18 @@ def init_db():
         product_id BIGINT NOT NULL REFERENCES products(id),
         batch_id BIGINT NOT NULL REFERENCES batches(id),
         quantity INT NOT NULL CHECK (quantity > 0),
-        unit_price NUMERIC(10, 2) NOT NULL CHECK (unit_price >= 0)
+        unit_price NUMERIC(10, 2) NOT NULL CHECK (unit_price >= 0),
+        mrp NUMERIC(10, 2) NOT NULL CHECK (mrp >= 0),
+        discount_percent NUMERIC(5, 2) NOT NULL
+            CHECK (discount_percent BETWEEN 0 AND 100)
     );
+
+    ALTER TABLE order_items
+        ADD COLUMN IF NOT EXISTS mrp NUMERIC(10, 2) NOT NULL DEFAULT 0
+            CHECK (mrp >= 0);
+    ALTER TABLE order_items
+        ADD COLUMN IF NOT EXISTS discount_percent NUMERIC(5, 2) NOT NULL DEFAULT 0
+            CHECK (discount_percent BETWEEN 0 AND 100);
 
     CREATE TABLE IF NOT EXISTS prescriptions (
         id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
