@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styling.css">
 </head>
 <body>
   <div class="auth-wrapper">
@@ -39,13 +39,23 @@
         <p class="sub">Register in just a few seconds.</p>
 
         <form action="#" method="post">
-          <div class="field">
-            <label for="name">Full Name</label>
-            <div class="input-wrap">
-              <i class="fa-regular fa-user"></i>
-              <input type="text" id="name" name="name" placeholder="Your name" required>
+          <div class="two-col">
+            <div class="field">
+              <label for="name">First Name</label>
+              <div class="input-wrap">
+                <i class="fa-regular fa-user"></i>
+                <input type="text" id="name" name="name" placeholder="Taukeer" required>
+              </div>
             </div>
-          </div>
+
+            <div class="field">
+              <label for="name">Last Name</label>
+              <div class="input-wrap">
+                <i class="fa-regular fa-user"></i>
+                <input type="text" id="name" name="name" placeholder="Ahmad" required>
+              </div>
+            </div>
+        </div>
 
           <div class="two-col">
             <div class="field">
@@ -61,14 +71,6 @@
                 <i class="fa-regular fa-envelope"></i>
                 <input type="email" id="email" name="email" placeholder="you@example.com" required>
               </div>
-            </div>
-          </div>
-
-          <div class="field">
-            <label for="address">Delivery Address</label>
-            <div class="input-wrap">
-              <i class="fa-solid fa-location-dot"></i>
-              <input type="text" id="address" name="address" placeholder="House / locality / city" required>
             </div>
           </div>
 
