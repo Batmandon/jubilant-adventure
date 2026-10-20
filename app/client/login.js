@@ -1,5 +1,3 @@
-const API_BASE_URL = "http://127.0.0.1:8000";
-
 const form = document.getElementById("login-form");
 const message = document.getElementById("login-message");
 const email = document.getElementById("email");
@@ -40,7 +38,7 @@ form.addEventListener("submit", async (event) => {
   showMessage("Logging in…", "success");
 
   try {
-    const response = await fetch(`${API_BASE_URL}/auth_routes/login`, {
+    const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/auth_routes/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",

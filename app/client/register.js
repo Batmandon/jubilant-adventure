@@ -1,5 +1,3 @@
-const API_BASE_URL = "http://127.0.0.1:8000";
-
 const form = document.getElementById("register-form");
 const message = document.getElementById("register-message");
 const password = document.getElementById("password");
@@ -62,7 +60,7 @@ form.addEventListener("submit", async (event) => {
   showMessage("Creating your account…", "success");
 
   try {
-    const response = await fetch(`${API_BASE_URL}/auth_routes/register`, {
+    const response = await fetch(`${window.APP_CONFIG.API_BASE_URL}/auth_routes/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
