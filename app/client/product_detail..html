@@ -7,53 +7,20 @@
     <title>Upload Prescription</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="product_detail.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/product_detail.css">
 </head>
 
 <body>
-    <header class="site-header">
-        <nav class="navbar">
-            <!-- Logo -->
-            <a href="#" class="nav-logo" aria-label="Home">
-                <div class="logo-icon">
-                    <i class="fa-solid fa-plus"></i>
-                </div>
-                <span class="logo-text">Shama<span>Medical</span></span>
-            </a>
-
-            <!-- Search Bar -->
-            <form class="nav-search" role="search" onsubmit="event.preventDefault();">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="search" class="search-input"
-                    placeholder="search for medicines, vitamins, or health conditions" aria-label="Search">
-            </form>
-
-            <!-- Action Links -->
-            <div class="nav-actions">
-                <a href="#" class="btn-upload">
-                    <i class="fa-solid fa-file-arrow-up"></i>
-                    <span>upload prescription</span>
-                </a>
-
-                <a href="#" class="nav-account">
-                    <i class="fa-regular fa-user"></i>
-                    <span class="account-text">My Account</span>
-                </a>
-
-                <a href="#" class="nav-cart" aria-label="Shopping Cart">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                </a>
-            </div>
-        </nav>
-    </header>
+    <div id="navbar-placeholder"></div>
 
 
     <!-- Breadcrumb Navigation -->
     <div class="breadcrumb-container">
         <nav class="breadcrumb">
-            <a href="/">Home</a> <i class="fa-solid fa-chevron-right"></i>
-            <a href="/shop">Shop</a> <i class="fa-solid fa-chevron-right"></i>
-            <a href="/shop/pain-fever">Pain &amp; Fever</a> <i class="fa-solid fa-chevron-right"></i>
+            <a href="index.html">Home</a> <i class="fa-solid fa-chevron-right"></i>
+            <a href="product.html">Shop</a> <i class="fa-solid fa-chevron-right"></i>
+            <a href="product.html">Pain &amp; Fever</a> <i class="fa-solid fa-chevron-right"></i>
             <span>Ibuprofen 400mg</span>
         </nav>
     </div>
@@ -196,7 +163,8 @@
         </section>
 
     </div>
-
+    <div id="footer-placeholder"></div>
+    <script src="js/components.js" defer></script>
 </body>
 
 </html>

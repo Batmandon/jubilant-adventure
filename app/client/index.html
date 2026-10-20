@@ -9,47 +9,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons Library -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
 
-    <header class="site-header">
-        <nav class="navbar">
-            <!-- Logo -->
-            <a href="#" class="nav-logo" aria-label="Home">
-                <div class="logo-icon">
-                    <i class="fa-solid fa-plus"></i>
-                </div>
-                <span class="logo-text">Shama<span>Medical</span></span>
-            </a>
-
-            <!-- Search Bar -->
-            <form class="nav-search" role="search" onsubmit="event.preventDefault();">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="search" class="search-input"
-                    placeholder="search for medicines, vitamins, or health conditions" aria-label="Search">
-            </form>
-
-            <!-- Action Links -->
-            <div class="nav-actions">
-                <a href="#" class="btn-upload">
-                    <i class="fa-solid fa-file-arrow-up"></i>
-                    <span>upload prescription</span>
-                </a>
-
-                <a href="#" class="nav-account">
-                    <i class="fa-regular fa-user"></i>
-                    <span class="account-text">My Account</span>
-                </a>
-
-                <a href="#" class="nav-cart" aria-label="Shopping Cart">
-                    <i class="fa-solid fa-cart-shopping"></i>
-                </a>
-            </div>
-
-        </nav>
-    </header>
+    <div id="navbar-placeholder"></div>
 
     <main>
         <!-- Compact Hero Section (~40vh to 45vh) -->
@@ -58,7 +24,7 @@
 
                 <!-- Left Side Image Box -->
                 <div class="hero-image-wrapper">
-                    <img src="medical.png" alt="Shama Medical Store" class="hero-image">
+                    <img src="images/medical.png" alt="Shama Medical Store" class="hero-image">
                     <div class="image-gradient-blend"></div>
                 </div>
 
@@ -296,12 +262,12 @@
 
 
         <!-- About Us Section -->
-        <section class="about-us-section">
+        <section class="about-us-section" id="about">
             <div class="about-container">
 
                 <!-- Left Side: Store Exterior Image -->
                 <div class="about-image-wrapper">
-                    <img src="medicalstore.png" alt="Shama Medical Store Exterior" class="about-image">
+                    <img src="images/medicalstore.png" alt="Shama Medical Store Exterior" class="about-image">
                 </div>
 
                 <!-- Right Side: Content Box -->
@@ -324,79 +290,9 @@
         </section>
 
     </main>
-    <!-- Site Footer -->
-    <footer class="site-footer">
-        <div class="footer-container">
+    <div id="footer-placeholder"></div>
 
-            <div class="footer-grid">
-
-                <!-- Column 1: About Shama Medical Store -->
-                <div class="footer-col">
-                    <div class="footer-brand">
-                        <div class="brand-icon">
-                            <i class="fa-solid fa-plus"></i>
-                        </div>
-                        <span class="brand-name">Shama <span>Medical</span></span>
-                    </div>
-                    <p class="footer-about-text">
-                        Aapki sehat, hamari zimmedari. Serving your neighborhood with 100% genuine medicines and
-                        fast home delivery.
-                    </p>
-                    <div class="footer-socials">
-                        <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-                        <a href="#" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
-                    </div>
-                </div>
-
-                <!-- Column 2: Quick Links & FAQs -->
-                <div class="footer-col">
-                    <h3 class="footer-heading">Quick Support</h3>
-                    <ul class="footer-links">
-                        <li><a href="#about"><i class="fa-solid fa-angle-right"></i> About Us</a></li>
-                        <li><a href="#faqs"><i class="fa-solid fa-angle-right"></i> FAQs &amp; Help</a></li>
-                        <li><a href="#upload"><i class="fa-solid fa-angle-right"></i> Upload Prescription</a></li>
-                        <li><a href="#contact"><i class="fa-solid fa-angle-right"></i> Contact Pharmacist</a></li>
-                    </ul>
-                </div>
-
-                <!-- Column 3: Legal & Privacy -->
-                <div class="footer-col">
-                    <h3 class="footer-heading">Policies</h3>
-                    <ul class="footer-links">
-                        <li><a href="#privacy"><i class="fa-solid fa-angle-right"></i> Privacy Policy</a></li>
-                        <li><a href="#terms"><i class="fa-solid fa-angle-right"></i> Terms of Service</a></li>
-                        <li><a href="#refunds"><i class="fa-solid fa-angle-right"></i> Return &amp; Refund
-                                Policy</a></li>
-                        <li><a href="#shipping"><i class="fa-solid fa-angle-right"></i> Shipping Information</a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Column 4: Payment Options -->
-                <div class="footer-col">
-                    <h3 class="footer-heading">Payment Options</h3>
-                    <p class="payment-subtitle">We accept safe &amp; secure payment methods:</p>
-                    <div class="payment-badges">
-                        <span class="payment-badge"><i class="fa-solid fa-qrcode"></i> UPI / QR</span>
-                        <span class="payment-badge"><i class="fa-solid fa-credit-card"></i> Cards</span>
-                        <span class="payment-badge"><i class="fa-solid fa-building-columns"></i> Net Banking</span>
-                        <span class="payment-badge"><i class="fa-solid fa-hand-holding-dollar"></i> Cash on
-                            Delivery</span>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Bottom Copyright Row -->
-            <div class="footer-bottom">
-                <p>&copy; 2026 Shama Medical Store. All rights reserved.</p>
-                <p class="secure-tag"><i class="fa-solid fa-shield-halved"></i> 100% Secure Checkout</p>
-            </div>
-
-        </div>
-    </footer>
-
+    <script src="js/components.js" defer></script>
 </body>
 
 </html>
