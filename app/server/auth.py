@@ -109,7 +109,11 @@ def login_credentials(userlogin: LoginCredentials, conn, response: Response):
             # domain = "127.0.0.1",
         )
 
-        return {"message": "Login successful", "name": user["first_name"] + " " + user["last_name"]}
+        return {
+            "message": "Login successful",
+            "name": user["first_name"] + " " + user["last_name"],
+            "role": user["role"],
+        }
 
 
 def get_user_info_from_request(request: Request):

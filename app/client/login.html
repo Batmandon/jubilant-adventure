@@ -38,12 +38,12 @@
         <h2>Login</h2>
         <p class="sub">Sign in to your account.</p>
 
-        <form action="#" method="post">
+        <form id="login-form">
           <div class="field">
-            <label for="email">Email or Mobile Number</label>
+            <label for="email">Email</label>
             <div class="input-wrap">
               <i class="fa-regular fa-user"></i>
-              <input type="text" id="email" name="email" placeholder="you@example.com or 98XXXXXXXX" required>
+              <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
             </div>
           </div>
 
@@ -51,7 +51,7 @@
             <label for="password">Password</label>
             <div class="input-wrap">
               <i class="fa-solid fa-lock"></i>
-              <input type="password" id="password" name="password" placeholder="Enter your password" required>
+              <input type="password" id="password" name="password" placeholder="Enter your password" minlength="8" autocomplete="current-password" required>
             </div>
           </div>
 
@@ -60,6 +60,7 @@
             <a href="#">Forgot password?</a>
           </div>
 
+          <p id="login-message" class="form-message" role="status" aria-live="polite" hidden></p>
           <button type="submit" class="btn">Login</button>
         </form>
 
@@ -69,5 +70,6 @@
     </main>
 
   </div>
+  <script src="login.js" defer></script>
 </body>
 </html>

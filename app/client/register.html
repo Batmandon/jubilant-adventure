@@ -38,38 +38,38 @@
         <h2>Create Account</h2>
         <p class="sub">Register in just a few seconds.</p>
 
-        <form action="#" method="post">
+        <form id="register-form" novalidate>
           <div class="two-col">
             <div class="field">
-              <label for="name">First Name</label>
+              <label for="first-name">First Name</label>
               <div class="input-wrap">
                 <i class="fa-regular fa-user"></i>
-                <input type="text" id="name" name="name" placeholder="Taukeer" required>
+                <input type="text" id="first-name" name="first_name" placeholder="Taukeer" minlength="3" maxlength="20" autocomplete="given-name" required>
               </div>
             </div>
 
             <div class="field">
-              <label for="name">Last Name</label>
+              <label for="last-name">Last Name</label>
               <div class="input-wrap">
                 <i class="fa-regular fa-user"></i>
-                <input type="text" id="name" name="name" placeholder="Ahmad" required>
+                <input type="text" id="last-name" name="last_name" placeholder="Ahmad" minlength="3" maxlength="20" autocomplete="family-name" required>
               </div>
             </div>
-        </div>
+          </div>
 
           <div class="two-col">
             <div class="field">
               <label for="phone">Mobile Number</label>
               <div class="input-wrap">
                 <i class="fa-solid fa-phone"></i>
-                <input type="tel" id="phone" name="phone" placeholder="98XXXXXXXX" pattern="[6-9][0-9]{9}" maxlength="10" required>
+                <input type="tel" id="phone" name="phone" placeholder="98XXXXXXXX" minlength="10" maxlength="15" autocomplete="tel" required>
               </div>
             </div>
             <div class="field">
               <label for="email">Email</label>
               <div class="input-wrap">
                 <i class="fa-regular fa-envelope"></i>
-                <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
               </div>
             </div>
           </div>
@@ -79,23 +79,24 @@
               <label for="password">Password</label>
               <div class="input-wrap">
                 <i class="fa-solid fa-lock"></i>
-                <input type="password" id="password" name="password" placeholder="Min 8 characters" minlength="8" required>
+                <input type="password" id="password" name="password" placeholder="8–20 characters" minlength="8" maxlength="20" autocomplete="new-password" required>
               </div>
             </div>
             <div class="field">
               <label for="confirm">Confirm Password</label>
               <div class="input-wrap">
                 <i class="fa-solid fa-lock"></i>
-                <input type="password" id="confirm" name="confirm" placeholder="Re-enter password" minlength="8" required>
+                <input type="password" id="confirm" name="confirm" placeholder="Re-enter password" minlength="8" maxlength="20" autocomplete="new-password" required>
               </div>
             </div>
           </div>
 
-          <label class="check" style="margin: 6px 0 20px;">
-            <input type="checkbox" name="terms" required>
+          <label class="check terms-check">
+            <input type="checkbox" id="terms" name="terms" required>
             <span>I agree to the <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</span>
           </label>
 
+          <p id="register-message" class="form-message" role="status" aria-live="polite" hidden></p>
           <button type="submit" class="btn">Register</button>
         </form>
 
@@ -105,5 +106,6 @@
     </main>
 
   </div>
+  <script src="register.js" defer></script>
 </body>
 </html>

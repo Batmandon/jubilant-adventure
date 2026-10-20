@@ -224,6 +224,29 @@ a:hover { text-decoration: underline; }
 
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
+.terms-check { margin: 6px 0 20px; }
+
+.form-message {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.form-message[hidden] { display: none; }
+.form-message.is-success {
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+.form-message.is-error {
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+.btn:disabled { cursor: wait; opacity: 0.7; }
+.dashboard-home { display: block; text-align: center; }
+
 .secure {
   margin-top: 26px;
   text-align: center;
