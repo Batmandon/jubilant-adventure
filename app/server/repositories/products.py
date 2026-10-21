@@ -147,16 +147,20 @@ class ProductRepository:
 
         return {"items": items, "page": page, "page_size": page_size, "total": total}
 
-    def search_products(self, name: str):
+    def get_products_by_name(self, name: str):
+        search_term = name.replace("!", "!!").replace("%", "!%").replace("_", "!_")
         with self.conn.cursor() as cur:
             cur.execute(
                 f"""
                 SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
                 FROM products
-                WHERE name ILIKE %s
+                WHERE is_active = TRUE
+                  AND name ILIKE %s ESCAPE '!'
                   AND {PRODUCT_IN_STOCK_CONDITION}
+                ORDER BY name, id
+                LIMIT %s
                 """,
-                (f"%{name}%",)
+                (f"%{search_term}%", 50)
             )
             return cur.fetchall()
 

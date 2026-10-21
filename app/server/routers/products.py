@@ -12,6 +12,16 @@ def list_products(page: int = Query(1, ge=1),
                   conn=Depends(get_db)):
     return ProductRepository(conn).list_products(page, page_size)
 
+@router.get("/search")
+def search_products(
+    name: str = Query(..., min_length=1, max_length=100),
+    conn=Depends(get_db),
+):
+    name = name.strip()
+    if not name:
+        raise HTTPException(status_code=422, detail="Search name cannot be blank")
+    return ProductRepository(conn).get_products_by_name(name)
+
 @router.post("", status_code=201)
 def add_product(
     product: AddProduct, admin=Depends(require_admin), conn=Depends(get_db),
