@@ -60,13 +60,36 @@
 
 .search-input {
     width: 100%;
-    padding: 0.65rem 1rem 0.65rem 2.6rem;
+    padding: 0.65rem 3rem 0.65rem 2.6rem;
     border: 1.5px solid #cbd5e1;
     border-radius: 20px;
     font-size: 0.875rem;
     color: #334155;
     outline: none;
     transition: border-color 1s ease, box-shadow 1s ease;
+}
+
+.search-submit {
+    position: absolute;
+    right: 0.35rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background-color: #0d9488;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.search-submit:hover { background-color: #0f766e; }
+
+.search-submit:focus-visible {
+    outline: 2px solid #0f766e;
+    outline-offset: 2px;
 }
 
 .search-input:focus {
