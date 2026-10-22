@@ -19,5 +19,25 @@ async function loadComponent(name, placeholderId) {
   }
 }
 
+document.addEventListener("submit", (event) => {
+  if (!(event.target instanceof HTMLFormElement) || !event.target.matches(".nav-search")) {
+    return;
+  }
+
+  event.preventDefault();
+  const input = event.target.querySelector(".search-input");
+  if (!(input instanceof HTMLInputElement)) {
+    return;
+  }
+
+  const resultsUrl = new URL("products.html", window.location.href);
+  const name = input.value.trim();
+  if (name) {
+    resultsUrl.searchParams.set("name", name);
+  }
+  resultsUrl.searchParams.set("page", "1");
+  window.location.assign(resultsUrl);
+});
+
 loadComponent("navbar", "navbar-placeholder");
 loadComponent("footer", "footer-placeholder");
