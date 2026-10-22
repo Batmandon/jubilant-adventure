@@ -147,8 +147,9 @@ class ProductRepository:
 
         return {"items": items, "page": page, "page_size": page_size, "total": total}
 
-    def get_products_by_name(self, name: str):
+    def get_products_by_name(self, name: str, page: int = 1, page_size: int = 20):
         search_term = name.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+        offset = (page - 1) * page_size
         with self.conn.cursor() as cur:
             cur.execute(
                 f"""
@@ -159,10 +160,25 @@ class ProductRepository:
                   AND {PRODUCT_IN_STOCK_CONDITION}
                 ORDER BY name, id
                 LIMIT %s
+                OFFSET %s
                 """,
-                (f"%{search_term}%", 50)
+                (f"%{search_term}%", page_size, offset)
             )
-            return cur.fetchall()
+            items = cur.fetchall()
+
+            cur.execute(
+                f"""
+                SELECT COUNT(*) AS total
+                FROM products
+                WHERE is_active = TRUE
+                  AND name ILIKE %s ESCAPE '!'
+                  AND {PRODUCT_IN_STOCK_CONDITION}
+                """,
+                (f"%{search_term}%",)
+            )
+            total = cur.fetchone()["total"]
+
+        return {"items": items, "page": page, "page_size": page_size, "total": total}
 
     def get_products_by_category(self, category_id: int):
         with self.conn.cursor() as cur:
