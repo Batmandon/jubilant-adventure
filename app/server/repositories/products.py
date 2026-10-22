@@ -188,8 +188,9 @@ class ProductRepository:
 
         return {"items": items, "page": page, "page_size": page_size, "total": total}
 
-    def get_products_by_name(self, name: str, page: int = 1, page_size: int = 20):
-        search_term = name.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+    def search_products(self, search_term: str, page: int = 1, page_size: int = 20):
+        search_term = search_term.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+        pattern = f"%{search_term}%"
         offset = (page - 1) * page_size
         with self.conn.cursor() as cur:
             cur.execute(
@@ -198,12 +199,16 @@ class ProductRepository:
                 FROM products p
                 {PRODUCT_CARD_JOINS}
                 WHERE p.is_active = TRUE
-                  AND p.name ILIKE %s ESCAPE '!'
+                  AND (
+                      p.name ILIKE %s ESCAPE '!'
+                      OR br.name ILIKE %s ESCAPE '!'
+                      OR c.name ILIKE %s ESCAPE '!'
+                  )
                 ORDER BY p.name, p.id
                 LIMIT %s
                 OFFSET %s
                 """,
-                (f"%{search_term}%", page_size, offset)
+                (pattern, pattern, pattern, page_size, offset)
             )
             items = cur.fetchall()
 
@@ -212,13 +217,25 @@ class ProductRepository:
                 SELECT COUNT(*) AS total
                 FROM products p
                 WHERE p.is_active = TRUE
-                  AND p.name ILIKE %s ESCAPE '!'
+                  AND (
+                      p.name ILIKE %s ESCAPE '!'
+                      OR EXISTS (
+                          SELECT 1 FROM brands br
+                          WHERE br.id = p.brand_id
+                            AND br.name ILIKE %s ESCAPE '!'
+                      )
+                      OR EXISTS (
+                          SELECT 1 FROM categories c
+                          WHERE c.id = p.category_id
+                            AND c.name ILIKE %s ESCAPE '!'
+                      )
+                  )
                   AND EXISTS (
                       SELECT 1 FROM batches b
                       WHERE b.product_id = p.id AND {SELLABLE_BATCH_CONDITION}
                   )
                 """,
-                (f"%{search_term}%",)
+                (pattern, pattern, pattern)
             )
             total = cur.fetchone()["total"]
 
@@ -230,29 +247,3 @@ class ProductRepository:
             )
 
         return {"items": items, "page": page, "page_size": page_size, "total": total}
-
-    def get_products_by_category(self, category_id: int):
-        with self.conn.cursor() as cur:
-            cur.execute(
-                f"""
-                SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
-                FROM products
-                WHERE category_id = %s
-                  AND {PRODUCT_IN_STOCK_CONDITION}
-                """,
-                (category_id,)
-            )
-            return cur.fetchall()
-
-    def get_products_by_brand(self, brand_id: int):
-        with self.conn.cursor() as cur:
-            cur.execute(
-                f"""
-                SELECT {", ".join(PRODUCT_PUBLIC_COLUMNS)}
-                FROM products
-                WHERE brand_id = %s
-                  AND {PRODUCT_IN_STOCK_CONDITION}
-                """,
-                (brand_id,)
-            )
-            return cur.fetchall()

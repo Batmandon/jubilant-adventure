@@ -13,7 +13,7 @@ def list_products(page: int = Query(1, ge=1),
     return ProductRepository(conn).list_products(page, page_size)
 
 @router.get("/search")
-def get_product_by_name(
+def search_products(
     name: str = Query(..., min_length=1, max_length=100),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
@@ -22,7 +22,7 @@ def get_product_by_name(
     name = name.strip()
     if not name:
         raise HTTPException(status_code=422, detail="Search name cannot be blank")
-    result = ProductRepository(conn).get_products_by_name(name, page, page_size)
+    result = ProductRepository(conn).search_products(name, page, page_size)
     if result["total"] == 0:
         raise HTTPException(
             status_code=404,
