@@ -17,95 +17,11 @@
 
   <main class="page">
     <div class="page-head">
-      <h1>Search Results</h1>
-      <p id="result-text">Showing <strong id="result-count">4 products</strong> for your search</p>
+      <h1 id="page-title">Products</h1>
+      <p id="result-text" aria-live="polite">Loading products...</p>
     </div>
 
-    <section class="product-grid" id="product-grid">
-
-      <!-- Product 1: OTC, in stock -->
-      <article class="card">
-        <div class="card-img">
-          <img src="https://placehold.co/600x450/e6faf8/0d9488?text=Paracetamol" alt="Paracetamol 500mg Tablets">
-          <span class="badge-off">25% OFF</span>
-        </div>
-        <div class="card-body">
-          <span class="cat">OTC Medicine</span>
-          <h2 class="name">Paracetamol 500mg Tablets</h2>
-          <span class="pack"><i class="fa-solid fa-box"></i> Strip of 15 tablets</span>
-          <span class="stock in">In stock</span>
-          <div class="price-row">
-            <span class="price">₹45.00</span>
-            <span class="mrp">₹60.00</span>
-            <span class="save">Save ₹15</span>
-          </div>
-          <button class="btn-cart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
-        </div>
-      </article>
-
-      <!-- Product 2: out of stock (demo) -->
-      <article class="card is-out">
-        <div class="card-img">
-          <img src="https://placehold.co/600x450/e6faf8/0d9488?text=Vitamin+C" alt="Vitamin C 1000mg Effervescent">
-          <span class="badge-off">15% OFF</span>
-        </div>
-        <div class="card-body">
-          <span class="cat">Vitamins</span>
-          <h2 class="name">Vitamin C 1000mg Effervescent</h2>
-          <span class="pack"><i class="fa-solid fa-box"></i> Tube of 20 tablets</span>
-          <span class="stock out">Out of stock</span>
-          <div class="price-row">
-            <span class="price">₹299.00</span>
-            <span class="mrp">₹350.00</span>
-            <span class="save">Save ₹51</span>
-          </div>
-          <button class="btn-cart" disabled>Out of Stock</button>
-        </div>
-      </article>
-
-      <!-- Product 3: OTC, in stock -->
-      <article class="card">
-        <div class="card-img">
-          <img src="https://placehold.co/600x450/e6faf8/0d9488?text=Thermometer" alt="Digital Clinical Thermometer">
-          <span class="badge-off">28% OFF</span>
-        </div>
-        <div class="card-body">
-          <span class="cat">Health Device</span>
-          <h2 class="name">Digital Clinical Thermometer</h2>
-          <span class="pack"><i class="fa-solid fa-box"></i> 1 unit</span>
-          <span class="stock in">In stock</span>
-          <div class="price-row">
-            <span class="price">₹180.00</span>
-            <span class="mrp">₹250.00</span>
-            <span class="save">Save ₹70</span>
-          </div>
-          <button class="btn-cart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
-        </div>
-      </article>
-
-      <!-- Product 4: Prescription required, in stock -->
-      <article class="card">
-        <div class="card-img">
-          <img src="https://placehold.co/600x450/e6faf8/0d9488?text=Amoxicillin" alt="Amoxicillin 500mg Capsules">
-          <span class="badge-off">20% OFF</span>
-          <span class="badge-rx"><i class="fa-solid fa-file-prescription"></i> Rx</span>
-        </div>
-        <div class="card-body">
-          <span class="cat">Prescription Med</span>
-          <h2 class="name">Amoxicillin 500mg Capsules</h2>
-          <span class="pack"><i class="fa-solid fa-box"></i> Strip of 10 capsules</span>
-          <span class="rx-note"><i class="fa-solid fa-file-prescription"></i> Prescription required</span>
-          <span class="stock in">In stock</span>
-          <div class="price-row">
-            <span class="price">₹120.00</span>
-            <span class="mrp">₹150.00</span>
-            <span class="save">Save ₹30</span>
-          </div>
-          <button class="btn-cart"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
-        </div>
-      </article>
-
-    </section>
+    <section class="product-grid" id="product-grid" aria-live="polite"></section>
 
     <!-- Empty state: shown by products.js when there are no products -->
     <section class="empty-state" id="empty-state" hidden>
@@ -126,7 +42,8 @@
   </main>
 
   <div id="footer-placeholder"></div>
+  <script src="js/config.js" defer></script>
   <script src="js/components.js" defer></script>
-  <script src="js/products.js"></script>
+  <script src="js/products.js" defer></script>
 </body>
 </html>

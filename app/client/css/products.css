@@ -118,6 +118,30 @@ a { color: inherit; text-decoration: none; }
 }
 .pack i { color: var(--teal); }
 
+.product-detail {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+.product-detail strong { color: var(--text); }
+.product-description {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+.product-image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--teal);
+  font-size: 3rem;
+}
+.price-unavailable {
+  margin: 6px 0 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
 .rx-note {
   display: inline-flex;
   align-items: center;
