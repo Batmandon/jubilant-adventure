@@ -22,7 +22,13 @@ def get_product_by_name(
     name = name.strip()
     if not name:
         raise HTTPException(status_code=422, detail="Search name cannot be blank")
-    return ProductRepository(conn).get_products_by_name(name, page, page_size)
+    result = ProductRepository(conn).get_products_by_name(name, page, page_size)
+    if result["total"] == 0:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No products found matching '{name}'.",
+        )
+    return result
 
 @router.post("", status_code=201)
 def add_product(
