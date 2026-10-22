@@ -255,6 +255,27 @@ a { color: inherit; text-decoration: none; }
 }
 .btn-primary:hover { background: var(--teal-dark); }
 
+.strength {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--muted);
+  margin-top: -2px;
+}
+
+/* ---------- Dynamic states ---------- */
+[hidden] { display: none !important; }
+
+.product-grid.is-loading {
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity .2s;
+}
+.error-state .empty-icon {
+  background: #fef2f2;
+  color: var(--danger);
+}
+.error-state .btn-primary { border: none; font: inherit; font-weight: 600; cursor: pointer; }
+
 /* ---------- Pagination ---------- */
 .pagination {
   display: flex;
