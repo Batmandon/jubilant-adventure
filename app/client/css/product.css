@@ -295,23 +295,17 @@ body {
     background-color: #0f766e;
 }
 
-.btn-outline-rx {
+.not-for-sale-label {
     width: 100%;
     padding: 0.55rem;
     border-radius: 0.4rem;
     border: 1px solid #cbd5e1;
-    background-color: #ffffff;
-    color: #0f172a;
+    background-color: #f1f5f9;
+    color: #475569;
     font-weight: 600;
     font-size: 0.825rem;
     text-align: center;
-    text-decoration: none;
     display: inline-block;
-    transition: background-color 0.2s ease;
-}
-
-.btn-outline-rx:hover {
-    background-color: #f1f5f9;
 }
 
 /* Responsive Breakpoints */

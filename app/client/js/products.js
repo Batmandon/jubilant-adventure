@@ -71,7 +71,7 @@ function renderProduct(product) {
     ? `<span class="badge-off">${escapeHtml(discount)}% OFF</span>`
     : "";
   const prescriptionBadge = product.requires_prescription
-    ? '<span class="badge-rx"><i class="fa-solid fa-file-prescription"></i> Rx</span>'
+    ? '<span class="badge-rx">Not for online sale</span>'
     : "";
   const priceDetails = hasPrice
     ? `<div class="price-row">
@@ -99,11 +99,13 @@ function renderProduct(product) {
       ${packDetails ? `<span class="pack"><i class="fa-solid fa-box"></i> ${packDetails}</span>` : ""}
       ${description ? `<p class="product-description">${description}</p>` : ""}
       ${product.requires_prescription
-        ? '<span class="rx-note"><i class="fa-solid fa-file-prescription"></i> Prescription required</span>'
+        ? '<span class="rx-note">Not for online sale</span>'
         : ""}
       <span class="stock in">In stock</span>
       ${priceDetails}
-      <button class="btn-cart" type="button"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>
+      ${product.requires_prescription
+        ? ""
+        : '<button class="btn-cart" type="button"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>'}
     </div>
   </article>`;
 }
