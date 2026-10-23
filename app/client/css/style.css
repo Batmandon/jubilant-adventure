@@ -327,6 +327,12 @@ body {
     gap: 1.5rem;
 }
 
+.featured-products-status {
+    padding: 1.5rem 0;
+    color: #475569;
+    text-align: center;
+}
+
 /* Product Card */
 .product-card {
     background-color: #ffffff;
@@ -829,5 +835,4 @@ body {
         text-align: center;
     }
 }
-
 
