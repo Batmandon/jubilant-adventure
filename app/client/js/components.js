@@ -30,7 +30,7 @@ document.addEventListener("submit", (event) => {
     return;
   }
 
-  const resultsUrl = new URL("products.html", window.location.href);
+  const resultsUrl = new URL("searchproduct.html", window.location.href);
   const name = input.value.trim();
   if (name) {
     resultsUrl.searchParams.set("name", name);

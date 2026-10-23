@@ -20,7 +20,7 @@ categorySection?.addEventListener("click", (event) => {
 
   event.preventDefault();
   const searchParams = new URLSearchParams({ name: categoryName });
-  window.location.assign(`products.html?${searchParams.toString()}`);
+  window.location.assign(`searchproduct.html?${searchParams.toString()}`);
 });
 
 function escapeHtml(value) {
