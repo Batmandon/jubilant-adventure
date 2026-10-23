@@ -1,0 +1,226 @@
+const grid = document.getElementById("product-grid");
+const emptyState = document.getElementById("empty-state");
+const pagination = document.getElementById("pagination");
+const resultText = document.getElementById("result-text");
+const pageTitle = document.getElementById("page-title");
+
+const params = new URLSearchParams(window.location.search);
+const searchName = (params.get("name") || "").trim();
+const currentPage = Math.max(1, Number.parseInt(params.get("page") || "1", 10) || 1);
+const pageSize = 20;
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character]);
+}
+
+function formatPrice(value) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) {
+    return null;
+  }
+
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+  }).format(amount);
+}
+
+function getImageUrl(value) {
+  if (!value) {
+    return "";
+  }
+
+  try {
+    const url = new URL(value, window.location.href);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+function renderProduct(product) {
+  const mrp = Number(product.mrp);
+  const discount = Number(product.discount_percentage ?? product.discount_percent ?? 0);
+  const hasPrice = product.mrp !== null
+    && product.mrp !== undefined
+    && Number.isFinite(mrp);
+  const sellingPrice = hasPrice
+    ? Math.floor((mrp * (100 - discount) / 100) * 100 + 0.5 + Number.EPSILON) / 100
+    : null;
+  const savings = hasPrice ? mrp - sellingPrice : null;
+  const name = escapeHtml(product.name || "Unnamed product");
+  const strength = escapeHtml(product.strength || "");
+  const category = escapeHtml(product.category || "Uncategorized");
+  const brand = escapeHtml(product.brand || "Brand not listed");
+  const manufacturer = escapeHtml(product.manufacturer || "");
+  const salt = escapeHtml(product.salt || "");
+  const description = escapeHtml(product.description || "");
+  const packDetails = [product.form, product.pack_size]
+    .filter(Boolean)
+    .map(escapeHtml)
+    .join(" · ");
+  const imageUrl = getImageUrl(product.image_url);
+  const discountBadge = discount > 0
+    ? `<span class="badge-off">${escapeHtml(discount)}% OFF</span>`
+    : "";
+  const prescriptionBadge = product.requires_prescription
+    ? '<span class="badge-rx">Not for online sale</span>'
+    : "";
+  const priceDetails = hasPrice
+    ? `<div class="price-row">
+          <span class="price">${formatPrice(sellingPrice)}</span>
+          <span class="mrp">${formatPrice(mrp)}</span>
+          ${discount > 0 ? `<span class="save">Save ${formatPrice(savings)}</span>` : ""}
+        </div>`
+    : '<p class="price-unavailable">Price unavailable</p>';
+
+  return `<article class="card" data-product-id="${escapeHtml(product.id)}">
+    <div class="card-img">
+      ${imageUrl
+        ? `<img src="${escapeHtml(imageUrl)}" alt="${name}" loading="lazy">`
+        : '<div class="product-image-placeholder" aria-hidden="true"><i class="fa-solid fa-pills"></i></div>'}
+      ${discountBadge}
+      ${prescriptionBadge}
+    </div>
+    <div class="card-body">
+      <span class="cat">${category}</span>
+      <h2 class="name">${name}</h2>
+      ${strength ? `<span class="strength">${strength}</span>` : ""}
+      <span class="product-detail"><strong>Brand:</strong> ${brand}</span>
+      ${manufacturer ? `<span class="product-detail"><strong>Manufacturer:</strong> ${manufacturer}</span>` : ""}
+      ${salt ? `<span class="product-detail"><strong>Salt:</strong> ${salt}</span>` : ""}
+      ${packDetails ? `<span class="pack"><i class="fa-solid fa-box"></i> ${packDetails}</span>` : ""}
+      ${description ? `<p class="product-description">${description}</p>` : ""}
+      ${product.requires_prescription
+        ? '<span class="rx-note">Not for online sale</span>'
+        : ""}
+      <span class="stock in">In stock</span>
+      ${priceDetails}
+      ${product.requires_prescription
+        ? ""
+        : '<button class="btn-cart" type="button"><i class="fa-solid fa-cart-plus"></i> Add to Cart</button>'}
+    </div>
+  </article>`;
+}
+
+function renderPagination(total) {
+  const totalPages = Math.ceil(total / pageSize);
+  pagination.replaceChildren();
+  pagination.hidden = totalPages <= 1;
+  if (pagination.hidden) {
+    return;
+  }
+
+  function addPageLink(page, label, className = "") {
+    const link = document.createElement("a");
+    const pageParams = new URLSearchParams(window.location.search);
+    pageParams.set("page", String(page));
+    link.href = `?${pageParams.toString()}`;
+    link.textContent = label;
+    if (className) {
+      link.className = className;
+    }
+    if (page === currentPage) {
+      link.setAttribute("aria-current", "page");
+    }
+    pagination.append(link);
+  }
+
+  if (currentPage > 1) {
+    addPageLink(currentPage - 1, "Previous");
+  }
+
+  const firstPage = Math.max(1, currentPage - 2);
+  const lastPage = Math.min(totalPages, currentPage + 2);
+  for (let page = firstPage; page <= lastPage; page += 1) {
+    if (page === currentPage) {
+      const current = document.createElement("span");
+      current.className = "current";
+      current.setAttribute("aria-current", "page");
+      current.textContent = String(page);
+      pagination.append(current);
+    } else {
+      addPageLink(page, String(page));
+    }
+  }
+
+  if (currentPage < totalPages) {
+    addPageLink(currentPage + 1, "Next");
+  }
+}
+
+function showError(error) {
+  console.error("Could not load products:", error);
+  grid.hidden = true;
+  pagination.hidden = true;
+  emptyState.hidden = false;
+  emptyState.classList.add("error-state");
+  emptyState.querySelector("h2").textContent = "Products could not be loaded";
+  emptyState.querySelector("p").textContent = error.message;
+  resultText.textContent = "There was a problem loading products.";
+}
+
+async function loadProducts() {
+  const apiBaseUrl = window.APP_CONFIG?.API_BASE_URL;
+  if (!apiBaseUrl) {
+    throw new Error("The API URL is not configured.");
+  }
+
+  const endpoint = new URL(
+    searchName ? "/products/search" : "/products",
+    apiBaseUrl
+  );
+  if (searchName) {
+    endpoint.searchParams.set("name", searchName);
+  }
+  endpoint.searchParams.set("page", String(currentPage));
+  endpoint.searchParams.set("page_size", String(pageSize));
+
+  const response = await fetch(endpoint);
+  if (response.status === 404 && searchName) {
+    grid.hidden = true;
+    pagination.hidden = true;
+    emptyState.hidden = false;
+    emptyState.classList.remove("error-state");
+    emptyState.querySelector("h2").textContent = "No products found";
+    emptyState.querySelector("p").textContent =
+      `We couldn't find anything matching "${searchName}". Check the spelling or try a different keyword.`;
+    pageTitle.textContent = "Search Results";
+    resultText.textContent = "No matching products.";
+    return;
+  }
+  if (!response.ok) {
+    throw new Error(`Product request failed (HTTP ${response.status}).`);
+  }
+
+  const result = await response.json();
+  if (!result || !Array.isArray(result.items) || !Number.isFinite(Number(result.total))) {
+    throw new Error("The server returned an invalid product response.");
+  }
+
+  grid.innerHTML = result.items.map(renderProduct).join("");
+  grid.hidden = result.items.length === 0;
+  emptyState.hidden = result.items.length > 0;
+  emptyState.classList.remove("error-state");
+  if (result.items.length === 0) {
+    emptyState.querySelector("h2").textContent = "No products found";
+    emptyState.querySelector("p").textContent = searchName
+      ? `We couldn't find anything matching "${searchName}". Check the spelling or try a different keyword.`
+      : "There are no products available right now.";
+  }
+
+  pageTitle.textContent = searchName ? "Search Results" : "Products";
+  resultText.textContent = searchName
+    ? `Showing ${result.total} products for "${searchName}"`
+    : `Showing ${result.total} products`;
+  renderPagination(Number(result.total));
+}
+
+loadProducts().catch(showError);
