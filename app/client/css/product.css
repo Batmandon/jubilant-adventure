@@ -195,17 +195,23 @@ body {
 }
 
 .catalog-empty-state {
-    padding: 2rem 1rem;
-    border: 1px dashed #cbd5e1;
-    border-radius: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
     color: #64748b;
     text-align: center;
 }
 
 .catalog-empty-state h2 {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
     color: #0f172a;
-    font-size: 1.1rem;
+    font-size: 1.5rem;
+}
+
+.catalog-empty-state p {
+    font-size: 1.125rem;
 }
 
 .catalog-empty-state[hidden],

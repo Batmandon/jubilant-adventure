@@ -2,9 +2,22 @@ const productGrid = document.getElementById("product-grid");
 const emptyState = document.getElementById("empty-state");
 const pagination = document.getElementById("pagination");
 const resultText = document.getElementById("result-text");
+const catalogContainer = document.querySelector(".shop-container");
 const pageSize = 20;
 const requestedPage = Number.parseInt(new URLSearchParams(window.location.search).get("page") || "1", 10);
 const currentPage = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+
+function stretchCatalogForEmptyState() {
+  if (!catalogContainer.classList.contains("has-empty-state")) {
+    return;
+  }
+
+  const emptyStateTop = emptyState.getBoundingClientRect().top + window.scrollY;
+  emptyState.style.minHeight =
+    `${Math.max(0, window.innerHeight + window.scrollY - emptyStateTop)}px`;
+}
+
+window.addEventListener("resize", stretchCatalogForEmptyState);
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({
@@ -148,6 +161,7 @@ function renderPagination(total) {
 }
 
 function showEmptyState(message, error = false) {
+  catalogContainer.classList.add("has-empty-state");
   productGrid.hidden = true;
   pagination.hidden = true;
   emptyState.hidden = false;
@@ -156,6 +170,7 @@ function showEmptyState(message, error = false) {
     ? "Products could not be loaded"
     : "No products found";
   emptyState.querySelector("p").textContent = message;
+  stretchCatalogForEmptyState();
 }
 
 async function loadProducts() {
@@ -196,6 +211,8 @@ async function loadProducts() {
 
   productGrid.innerHTML = result.items.map(renderProduct).join("");
   productGrid.hidden = false;
+  catalogContainer.classList.remove("has-empty-state");
+  emptyState.style.minHeight = "";
   emptyState.hidden = true;
   resultText.textContent = `Showing ${result.total} products`;
   renderPagination(result.total);
