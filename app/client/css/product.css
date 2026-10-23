@@ -43,104 +43,10 @@ body {
     margin: 1.5rem auto 4rem;
     padding: 0 1.5rem;
     display: grid;
-    grid-template-columns: 16rem 1fr; /* 2 Columns: Small Aside + Large Main Section */
-    gap: 2rem;
+    grid-template-columns: 1fr;
     align-items: start;
 }
 
-/* ---------------- SIDEBAR FILTERS (ASIDE) ---------------- */
-.sidebar-filters {
-    background-color: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 0.75rem;
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.filter-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.filter-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #0f172a;
-}
-
-.filter-icon-box {
-    color: #64748b;
-    font-size: 0.95rem;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-}
-
-.filter-group-title {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #0f172a;
-}
-
-/* Checkbox Items Layout */
-.filter-options-vertical {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.filter-options-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem 0.75rem;
-}
-
-.filter-checkbox {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.825rem;
-    color: #334155;
-    cursor: pointer;
-}
-
-.filter-checkbox input[type="checkbox"] {
-    accent-color: #0d9488;
-    width: 0.95rem;
-    height: 0.95rem;
-    border-radius: 0.25rem;
-}
-
-/* Price Range Slider */
-.price-slider-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
-
-.price-slider {
-    width: 100%;
-    accent-color: #0d9488;
-    cursor: pointer;
-}
-
-.price-labels {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #475569;
-}
-
-/* ---------------- PRODUCTS SECTION (RIGHT) ---------------- */
 .products-section {
     display: flex;
     flex-direction: column;
