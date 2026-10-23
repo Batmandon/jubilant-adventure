@@ -45,6 +45,44 @@ function getImageUrl(value) {
   }
 }
 
+function isOptionalString(value) {
+  return value === null || value === undefined || typeof value === "string";
+}
+
+function isValidAmount(value) {
+  return value === null
+    || value === undefined
+    || (value !== "" && Number.isFinite(Number(value)) && Number(value) >= 0);
+}
+
+function isValidProduct(product) {
+  const discount = product?.discount_percentage ?? product?.discount_percent ?? 0;
+  const productId = Number(product?.id);
+  return product !== null
+    && typeof product === "object"
+    && !Array.isArray(product)
+    && Number.isInteger(productId)
+    && productId > 0
+    && typeof product.name === "string"
+    && product.name.trim().length > 0
+    && isOptionalString(product.brand)
+    && isOptionalString(product.strength)
+    && isOptionalString(product.pack_size)
+    && isOptionalString(product.category)
+    && isOptionalString(product.image_url)
+    && isOptionalString(product.form)
+    && isOptionalString(product.manufacturer)
+    && isOptionalString(product.salt)
+    && isOptionalString(product.description)
+    && (product.requires_prescription === undefined
+      || product.requires_prescription === null
+      || typeof product.requires_prescription === "boolean")
+    && isValidAmount(product.mrp)
+    && Number.isFinite(Number(discount))
+    && Number(discount) >= 0
+    && Number(discount) <= 100;
+}
+
 function renderProduct(product) {
   const mrp = Number(product.mrp);
   const discount = Number(product.discount_percentage ?? product.discount_percent ?? 0);
@@ -163,7 +201,8 @@ function showError(error) {
   emptyState.hidden = false;
   emptyState.classList.add("error-state");
   emptyState.querySelector("h2").textContent = "Products could not be loaded";
-  emptyState.querySelector("p").textContent = error.message;
+  emptyState.querySelector("p").textContent =
+    "Please check your connection and try again later.";
   resultText.textContent = "There was a problem loading products.";
 }
 
@@ -201,7 +240,17 @@ async function loadProducts() {
   }
 
   const result = await response.json();
-  if (!result || !Array.isArray(result.items) || !Number.isFinite(Number(result.total))) {
+  const isValidResponse = result !== null
+    && typeof result === "object"
+    && !Array.isArray(result)
+    && Array.isArray(result.items)
+    && Number.isInteger(result.total)
+    && result.total >= 0
+    && result.page === currentPage
+    && result.page_size === pageSize
+    && result.items.length <= pageSize
+    && result.items.every(isValidProduct);
+  if (!isValidResponse) {
     throw new Error("The server returned an invalid product response.");
   }
 
@@ -220,7 +269,7 @@ async function loadProducts() {
   resultText.textContent = searchName
     ? `Showing ${result.total} products for "${searchName}"`
     : `Showing ${result.total} products`;
-  renderPagination(Number(result.total));
+  renderPagination(result.total);
 }
 
 loadProducts().catch(showError);
