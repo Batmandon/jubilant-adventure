@@ -204,24 +204,25 @@ body {
     border-radius: 1rem;
     background-color: #f0fdfa;
     color: #64748b;
+    font-family: 'Poppins', sans-serif;
     text-align: center;
 }
 
 .catalog-empty-state h2 {
     color: #0f172a;
-    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
     font-weight: 700;
     line-height: 1.2;
 }
 
 .catalog-empty-state p {
-    max-width: 36rem;
-    font-size: clamp(1.125rem, 2vw, 1.35rem);
+    max-width: 42rem;
+    font-size: clamp(1.35rem, 2.5vw, 1.75rem);
     line-height: 1.6;
 }
 
 .catalog-error-state h2 {
-    color: #b91c1c;
+    color: #0b7c72;
 }
 
 .catalog-empty-state[hidden],
@@ -253,8 +254,8 @@ body {
 }
 
 .catalog-error-state {
-    border-color: #fecaca;
-    color: #b91c1c;
+    border-color: #99f6e4;
+    color: #0b7c72;
 }
 
 /* Action Buttons */
