@@ -199,22 +199,36 @@ class OrderRepository:
 
         return {"items": items, "total": total}
 
-    def place_order(self, user_id: int, address_id: int, payment_method: str) -> dict:
+    def place_order(
+        self,
+        user_id: int,
+        address_id: int | None,
+        payment_method: str,
+    ) -> dict:
         # Everything below is one transaction: if anything raises, nothing is saved.
         with self.conn.transaction():
             with self.conn.cursor() as cur:
-                # 1. Address must belong to this user
-                cur.execute(
-                    """
-                    SELECT line, city, pincode, phone
-                    FROM addresses
-                    WHERE id = %s AND user_id = %s
-                    """,
-                    (address_id, user_id),
-                )
-                addr = cur.fetchone()
-                if addr is None:
-                    raise AddressNotFound()
+                if payment_method == "pickup":
+                    addr = {
+                        "line": "Shama Medical Store, Behjam",
+                        "city": "Lakhimpur-kheri",
+                        "pincode": "",
+                        "phone": "",
+                    }
+                else:
+                    if address_id is None:
+                        raise AddressNotFound()
+                    cur.execute(
+                        """
+                        SELECT line, city, pincode, phone
+                        FROM addresses
+                        WHERE id = %s AND user_id = %s
+                        """,
+                        (address_id, user_id),
+                    )
+                    addr = cur.fetchone()
+                    if addr is None:
+                        raise AddressNotFound()
 
                 # 2. Read the cart (ORDER BY product_id keeps lock order consistent)
                 cur.execute(
@@ -276,6 +290,9 @@ class OrderRepository:
 
                     if needed > 0:
                         raise OutOfStock(item["name"])
+
+                if payment_method == "cod":
+                    total += Decimal("30.00")
 
                 # 4. Insert the order (address copied as a snapshot)
                 cur.execute(

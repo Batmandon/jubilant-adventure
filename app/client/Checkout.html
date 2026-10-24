@@ -32,11 +32,11 @@
             <section>
                 <div class="card">
                     <h2>How do you want to get it?</h2>
-                    <div class="seg" role="group" aria-label="Fulfillment">
-                        <button type="button" aria-pressed="false" data-m="pickup">In-store pickup</button>
-                        <button type="button" aria-pressed="true" data-m="delivery">Home delivery</button>
+                    <div class="seg" id="fulfillment-options" role="group" aria-label="Fulfillment">
+                        <button type="button" aria-pressed="false" data-fulfillment="pickup">In-store pickup</button>
+                        <button type="button" aria-pressed="true" data-fulfillment="delivery">Home delivery</button>
                     </div>
-                    <div class="addr">
+                    <div class="addr" id="checkout-address" data-address-id="">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" />
@@ -44,24 +44,17 @@
                         </svg>
                         <div class="address-content">
                             <b id="atitle">Deliver to</b>
-                            <small id="atext">123 Healthcare Blvd, Apt 4B, New York, NY 10001</small>
-                            <div class="address-editor" id="address-editor" hidden>
-                                <label for="address-input">Address</label>
-                                <input id="address-input" type="text" autocomplete="street-address">
-                                <div>
-                                    <button class="link" id="save-address" type="button">Save</button>
-                                    <button class="link" id="cancel-address" type="button">Cancel</button>
-                                </div>
-                            </div>
+                            <small id="atext">Loading saved addresses...</small>
+                            <label class="address-picker-label" for="delivery-address-select" hidden>Choose a delivery address</label>
+                            <select id="delivery-address-select" class="address-picker" aria-label="Delivery address" hidden></select>
                         </div>
-                        <button class="link" id="edit-address" type="button" aria-expanded="false">Edit</button>
                     </div>
                 </div>
 
                 <div class="card">
                     <h2>Payment method</h2>
 
-                    <label class="pay"><input type="radio" name="pm" checked>
+                    <label class="pay"><input type="radio" name="pm" value="cod" checked>
                         <div class="row"><span class="dot"></span><strong>Cash / card on delivery</strong></div>
                         <p class="note">Pay the courier when your order arrives.</p>
                     </label>
@@ -94,69 +87,6 @@
 
     <script src="js/config.js"></script>
     <script src="js/orders.js"></script>
-    <script>
-        (function () {
-            var t = document.getElementById('t'), to;
-            function toast(m) { t.textContent = m; t.classList.add('show'); clearTimeout(to); to = setTimeout(function () { t.classList.remove('show') }, 2600) }
-            var seg = document.querySelectorAll('.seg button');
-            var addressTitle = document.getElementById('atitle');
-            var addressText = document.getElementById('atext');
-            var addressEditor = document.getElementById('address-editor');
-            var addressInput = document.getElementById('address-input');
-            var editAddress = document.getElementById('edit-address');
-            var pickupAddress = 'Shama Medical Store, 45 W 34th St, New York, NY 10001';
-            var deliveryAddress = addressText.textContent.trim();
-
-            function closeAddressEditor() {
-                addressEditor.hidden = true;
-                editAddress.setAttribute('aria-expanded', 'false');
-            }
-
-            seg.forEach(function (b) {
-                b.addEventListener('click', function () {
-                    seg.forEach(function (x) { x.setAttribute('aria-pressed', x === b) });
-                    var p = b.dataset.m === 'pickup';
-                    addressTitle.textContent = p ? 'Pick up at' : 'Deliver to';
-                    addressText.textContent = p ? pickupAddress : deliveryAddress;
-                    closeAddressEditor();
-                })
-            });
-
-            editAddress.addEventListener('click', function () {
-                addressInput.value = addressText.textContent.trim();
-                addressEditor.hidden = false;
-                editAddress.setAttribute('aria-expanded', 'true');
-                addressInput.focus();
-            });
-
-            document.getElementById('save-address').addEventListener('click', function () {
-                var updatedAddress = addressInput.value.trim();
-                if (!updatedAddress) {
-                    toast('Enter an address before saving.');
-                    addressInput.focus();
-                    return;
-                }
-                if (addressTitle.textContent === 'Pick up at') {
-                    pickupAddress = updatedAddress;
-                } else {
-                    deliveryAddress = updatedAddress;
-                }
-                addressText.textContent = updatedAddress;
-                closeAddressEditor();
-            });
-
-            document.getElementById('cancel-address').addEventListener('click', closeAddressEditor);
-
-            var side = document.getElementById('sum'), tg = document.getElementById('tg');
-            tg.addEventListener('click', function () { var o = side.classList.toggle('open'); tg.setAttribute('aria-expanded', o); document.getElementById('tgl').textContent = o ? 'Hide' : 'Show' });
-
-            document.querySelectorAll('[data-order]').forEach(function (b) {
-                b.addEventListener('click', function () {
-                    toast(b.disabled ? 'Your cart is empty.' : 'Order placed.');
-                })
-            });
-        })();
-    </script>
 </body>
 
 </html>

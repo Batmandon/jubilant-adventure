@@ -175,34 +175,24 @@
             min-width: 0
         }
 
-        .address-editor {
-            display: grid;
-            gap: 8px;
+        .address-picker-label {
+            display: block;
             margin-top: 10px
         }
 
-        .address-editor[hidden] {
+        .address-picker-label[hidden],
+        .address-picker[hidden] {
             display: none
         }
 
-        .address-editor label {
-            color: var(--mute);
-            font-size: 12px;
-            font-weight: 600
-        }
-
-        .address-editor input {
+        .address-picker {
             width: 100%;
-            padding: 10px 12px;
+            margin-top: 6px;
+            padding: 10px;
             border: 1px solid var(--line);
             border-radius: 10px;
             background: var(--card);
-            outline: 0
-        }
-
-        .address-editor input:focus {
-            border-color: var(--brand);
-            box-shadow: 0 0 0 3px var(--tint)
+            color: var(--ink)
         }
 
         .addr small {

@@ -30,3 +30,23 @@ class AddressRepository:
                 ),
             )
             return cur.fetchone()
+
+    def list_addresses(self, email: str):
+        with self.conn.cursor() as cur:
+            user = get_user(cur, email, ("id",))
+            if user is None:
+                return {
+                    "error": "Authenticated user no longer exists.",
+                    "status_code": 401,
+                }
+
+            cur.execute(
+                """
+                SELECT id, line, city, pincode, phone
+                FROM addresses
+                WHERE user_id = %s
+                ORDER BY id
+                """,
+                (user["id"],),
+            )
+            return {"items": cur.fetchall()}
