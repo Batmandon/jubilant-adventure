@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, status, Query
 from database import get_db
 from models.Order_model import AddCartItem, PlaceOrder
 from auth import get_current_user
@@ -42,6 +42,37 @@ def add_cart_item(
             detail=result["error"],
         )
     return {"message": "Cart item added successfully", "cart_item": result}
+
+
+@router.delete("/items/{product_id}")
+def delete_cart_item(
+    product_id: int = Path(gt=0),
+    user=Depends(get_current_user),
+    conn=Depends(get_db),
+):
+    repository = OrderRepository(conn)
+    user_id = repository.get_user_id(user["sub"])
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authenticated user no longer exists.",
+        )
+
+    try:
+        result = repository.delete_cart_item(user_id, product_id)
+    except psycopg.Error:
+        logger.exception("delete_cart_item failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not remove cart item.",
+        )
+
+    if "error" in result:
+        raise HTTPException(
+            status_code=result["status_code"],
+            detail=result["error"],
+        )
+    return {"message": "Cart item removed successfully"}
 
 
 

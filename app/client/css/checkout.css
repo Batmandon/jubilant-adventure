@@ -298,6 +298,7 @@
         .item {
             display: flex;
             gap: 12px;
+            align-items: center;
             padding: 12px 0;
             border-bottom: 1px solid var(--line)
         }
@@ -337,6 +338,37 @@
             white-space: nowrap
         }
 
+        .remove-item {
+            display: grid;
+            width: 36px;
+            height: 36px;
+            flex: none;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: var(--card);
+            color: var(--mute);
+            cursor: pointer;
+            transition: color .15s, border-color .15s, background .15s
+        }
+
+        .remove-item:hover {
+            border-color: #dc2626;
+            background: #fef2f2;
+            color: #b91c1c
+        }
+
+        .remove-item:focus-visible {
+            outline: 3px solid var(--brand);
+            outline-offset: 2px
+        }
+
+        .cart-empty {
+            margin: 12px 0;
+            color: var(--mute);
+            text-align: center
+        }
+
         .sum {
             display: flex;
             justify-content: space-between;
@@ -370,6 +402,12 @@
 
         .cta:hover {
             background: var(--brand-d)
+        }
+
+        .cta:disabled {
+            background: var(--mute);
+            cursor: not-allowed;
+            opacity: .7
         }
 
         .cta:active {

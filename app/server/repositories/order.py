@@ -108,6 +108,29 @@ class OrderRepository:
             )
             return cur.fetchone()
 
+    def delete_cart_item(self, user_id: int, product_id: int):
+        if type(product_id) is not int or product_id <= 0:
+            return {
+                "error": "Product ID must be a positive integer.",
+                "status_code": 422,
+            }
+
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                DELETE FROM cart_items
+                WHERE user_id = %s AND product_id = %s
+                """,
+                (user_id, product_id),
+            )
+            if cur.rowcount == 0:
+                return {
+                    "error": f"Product with ID {product_id} was not found in the cart.",
+                    "status_code": 404,
+                }
+
+        return {"deleted": True, "product_id": product_id}
+
     def place_order(self, user_id: int, address_id: int, payment_method: str) -> dict:
         # Everything below is one transaction: if anything raises, nothing is saved.
         with self.conn.transaction():
