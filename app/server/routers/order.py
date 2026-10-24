@@ -75,6 +75,45 @@ def delete_cart_item(
     return {"message": "Cart item removed successfully"}
 
 
+@router.get("/items")
+def get_cart_items(
+    user=Depends(get_current_user),
+    conn=Depends(get_db),
+):
+    try:
+        repository = OrderRepository(conn)
+        user_id = repository.get_user_id(user["sub"])
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authenticated user no longer exists.",
+            )
+        result = repository.get_cart_items(user_id)
+    except OutOfStock as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Not enough stock for {e.product_name}",
+        )
+    except MissingBatchPrice as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Batch price is not set for {e.product_name}",
+        )
+    except psycopg.Error:
+        logger.exception("get_cart_items failed")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not fetch cart items.",
+        )
+
+    if "error" in result:
+        raise HTTPException(
+            status_code=result["status_code"],
+            detail=result["error"],
+        )
+    return result
+
+
 
 @router.post("", status_code=201)
 def place_order(

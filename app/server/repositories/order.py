@@ -1,5 +1,5 @@
 from auth import get_user
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from repositories.pricing import selling_price
 
 # Schedules that need a prescription. Orders with these are blocked until the
@@ -130,6 +130,74 @@ class OrderRepository:
                 }
 
         return {"deleted": True, "product_id": product_id}
+
+    def get_cart_items(self, user_id: int) -> dict:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT c.product_id, c.quantity, p.name, p.strength, p.pack_size,
+                       p.image_url AS img_url, p.is_active,
+                       b.id AS batch_id, b.quantity AS batch_quantity,
+                       b.mrp, b.discount_percent
+                FROM cart_items c
+                JOIN products p ON p.id = c.product_id
+                LEFT JOIN batches b
+                  ON b.product_id = p.id
+                 AND b.quantity > 0
+                 AND b.expiry_date >= CURRENT_DATE
+                WHERE c.user_id = %s
+                ORDER BY c.product_id, b.expiry_date, b.id
+                """,
+                (user_id,),
+            )
+            rows = cur.fetchall()
+
+        items = []
+        total = Decimal("0.00")
+        index = 0
+        while index < len(rows):
+            first_row = rows[index]
+            quantity = first_row["quantity"]
+            item_total = Decimal("0.00")
+            remaining = quantity
+
+            if not first_row["is_active"]:
+                raise OutOfStock(first_row["name"])
+
+            while index < len(rows) and rows[index]["product_id"] == first_row["product_id"]:
+                row = rows[index]
+                index += 1
+                if row["batch_id"] is None or remaining == 0:
+                    continue
+                if row["mrp"] is None:
+                    raise MissingBatchPrice(first_row["name"])
+
+                allocated_quantity = min(remaining, row["batch_quantity"])
+                unit_price = selling_price(row["mrp"], row["discount_percent"])
+                item_total += unit_price * allocated_quantity
+                remaining -= allocated_quantity
+
+            if remaining > 0:
+                raise OutOfStock(first_row["name"])
+
+            items.append(
+                {
+                    "product_id": first_row["product_id"],
+                    "name": first_row["name"],
+                    "strength": first_row["strength"],
+                    "pack_size": first_row["pack_size"],
+                    "img_url": first_row["img_url"],
+                    "quantity": quantity,
+                    "price": (item_total / quantity).quantize(
+                        Decimal("0.01"),
+                        rounding=ROUND_HALF_UP,
+                    ),
+                    "line_total": item_total,
+                }
+            )
+            total += item_total
+
+        return {"items": items, "total": total}
 
     def place_order(self, user_id: int, address_id: int, payment_method: str) -> dict:
         # Everything below is one transaction: if anything raises, nothing is saved.
