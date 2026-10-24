@@ -70,35 +70,30 @@
 
             <aside id="sum">
                 <div class="card" style="margin:0">
-                    <button class="sumtoggle" type="button" aria-expanded="false" id="tg"><span id="mobile-summary-title">Order summary (1 item)</span><em id="tgl">Show</em></button>
-                    <h2 class="desk" id="desktop-summary-title">Order summary (1 item)</h2>
+                    <button class="sumtoggle" type="button" aria-expanded="false" id="tg"><span id="mobile-summary-title">Order summary</span><em id="tgl">Show</em></button>
+                    <h2 class="desk" id="desktop-summary-title">Order summary</h2>
                     <div class="sumbody">
-                        <div class="item" data-cart-item data-price="8.49">
-                            <div class="pill">💊</div>
-                            <div><b>Ibuprofen 400mg</b><small>100 tablets · Qty 1</small></div>
-                            <span class="price">₹8.49</span>
-                            <button class="remove-item" type="button" data-remove-item
-                                aria-label="Remove Ibuprofen 400mg from cart" title="Remove item">
-                                <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                        <p class="cart-empty" id="cart-empty" role="status" hidden>Your cart is empty.</p>
-                        <div class="sum"><span>Subtotal</span><span data-summary="subtotal">₹8.49</span></div>
-                        <div class="sum"><span>Delivery</span><span data-summary="delivery">₹2.00</span></div>
-                        <div class="sum"><span>Estimated tax</span><span data-summary="tax">₹1.50</span></div>
-                        <div class="total"><span>Total</span><span data-summary="total">₹11.99</span></div>
-                        <button class="cta desk" type="button" data-order>Place order</button>
+                        <div id="cart-items"></div>
+                        <p class="cart-empty" id="cart-message" role="status">Loading your cart...</p>
+                        <div class="sum"><span>Subtotal</span><span data-summary="subtotal">₹0.00</span></div>
+                        <div class="sum"><span>Delivery</span><span data-summary="delivery">₹0.00</span></div>
+                        <div class="sum"><span>Estimated tax</span><span data-summary="tax">₹0.00</span></div>
+                        <div class="total"><span>Total</span><span data-summary="total">₹0.00</span></div>
+                        <button class="cta desk" type="button" data-order disabled>Place order</button>
                     </div>
                 </div>
             </aside>
         </div>
     </main>
 
-    <div><small>Total</small><b data-summary="mobile-total">₹11.99</b></div>
-        <button class="cta" type="button" data-order>Place order</button>
+    <div class="mbar">
+        <div><small>Total</small><b data-summary="mobile-total">₹0.00</b></div>
+        <button class="cta" type="button" data-order disabled>Place order</button>
     </div>
     <div class="toast" id="t" role="status"></div>
 
+    <script src="js/config.js"></script>
+    <script src="js/orders.js"></script>
     <script>
         (function () {
             var t = document.getElementById('t'), to;
@@ -154,39 +149,6 @@
 
             var side = document.getElementById('sum'), tg = document.getElementById('tg');
             tg.addEventListener('click', function () { var o = side.classList.toggle('open'); tg.setAttribute('aria-expanded', o); document.getElementById('tgl').textContent = o ? 'Hide' : 'Show' });
-            var cartEmpty = document.getElementById('cart-empty');
-            var orderButtons = document.querySelectorAll('[data-order]');
-            var currency = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });
-
-            function updateOrderSummary() {
-                var items = side.querySelectorAll('[data-cart-item]');
-                var itemCount = items.length;
-                var subtotal = 0;
-                items.forEach(function (item) { subtotal += Number(item.dataset.price); });
-                var delivery = itemCount ? 2 : 0;
-                var tax = itemCount ? 1.5 : 0;
-                var total = subtotal + delivery + tax;
-                var countLabel = 'Order summary (' + itemCount + ' ' + (itemCount === 1 ? 'item' : 'items') + ')';
-
-                document.getElementById('mobile-summary-title').textContent = countLabel;
-                document.getElementById('desktop-summary-title').textContent = countLabel;
-                side.querySelector('[data-summary="subtotal"]').textContent = currency.format(subtotal);
-                side.querySelector('[data-summary="delivery"]').textContent = currency.format(delivery);
-                side.querySelector('[data-summary="tax"]').textContent = currency.format(tax);
-                side.querySelector('[data-summary="total"]').textContent = currency.format(total);
-                document.querySelector('[data-summary="mobile-total"]').textContent = currency.format(total);
-                cartEmpty.hidden = itemCount !== 0;
-                orderButtons.forEach(function (button) { button.disabled = itemCount === 0; });
-            }
-
-            side.addEventListener('click', function (event) {
-                if (!(event.target instanceof Element)) return;
-                var removeButton = event.target.closest('[data-remove-item]');
-                if (!removeButton || !side.contains(removeButton)) return;
-                removeButton.closest('[data-cart-item]').remove();
-                updateOrderSummary();
-                toast('Item removed from your cart.');
-            });
 
             document.querySelectorAll('[data-order]').forEach(function (b) {
                 b.addEventListener('click', function () {
