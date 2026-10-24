@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>Shama Medical Store – Checkout</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/checkout.css">
+</head>
+
+<body>
+    <header>
+        <div class="bar">
+            <a href="index.html" class="nav-logo" aria-label="Home">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-plus"></i>
+                </div>
+                <span class="logo-text">Shama<span>Medical</span></span>
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <div class="top">
+            <h1>Checkout</h1>
+            <div class="crumbs">Cart <span>›</span> <b>Payment</b> <span>›</span> Confirmation</div>
+        </div>
+
+        <div class="grid">
+            <section>
+                <div class="card">
+                    <h2>How do you want to get it?</h2>
+                    <div class="seg" role="group" aria-label="Fulfillment">
+                        <button type="button" aria-pressed="false" data-m="pickup">In-store pickup</button>
+                        <button type="button" aria-pressed="true" data-m="delivery">Home delivery</button>
+                    </div>
+                    <div class="addr">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z" />
+                            <circle cx="12" cy="10" r="2.5" />
+                        </svg>
+                        <div class="address-content">
+                            <b id="atitle">Deliver to</b>
+                            <small id="atext">123 Healthcare Blvd, Apt 4B, New York, NY 10001</small>
+                            <div class="address-editor" id="address-editor" hidden>
+                                <label for="address-input">Address</label>
+                                <input id="address-input" type="text" autocomplete="street-address">
+                                <div>
+                                    <button class="link" id="save-address" type="button">Save</button>
+                                    <button class="link" id="cancel-address" type="button">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="link" id="edit-address" type="button" aria-expanded="false">Edit</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Payment method</h2>
+
+                    <label class="pay"><input type="radio" name="pm" checked>
+                        <div class="row"><span class="dot"></span><strong>Cash / card on delivery</strong></div>
+                        <p class="note">Pay the courier when your order arrives.</p>
+                    </label>
+                </div>
+            </section>
+
+            <aside id="sum">
+                <div class="card" style="margin:0">
+                    <button class="sumtoggle" type="button" aria-expanded="false" id="tg"><span>Order summary (1
+                            item)</span><em id="tgl">Show</em></button>
+                    <h2 class="desk">Order summary (1 item)</h2>
+                    <div class="sumbody">
+                        <div class="item">
+                            <div class="pill">💊</div>
+                            <div><b>Ibuprofen 400mg</b><small>100 tablets · Qty 1</small></div><span
+                                class="price">₹8.49</span>
+                        </div>
+                        <div class="sum"><span>Subtotal</span><span>₹8.49</span></div>
+                        <div class="sum"><span>Delivery</span><span>₹2.00</span></div>
+                        <div class="sum"><span>Estimated tax</span><span>₹1.50</span></div>
+                        <div class="total"><span>Total</span><span>₹11.99</span></div>
+                        <button class="cta desk" type="button" data-order>Place order</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <div class="mbar">
+        <div><small>Total</small><b>₹11.99</b></div>
+        <button class="cta" type="button" data-order>Place order</button>
+    </div>
+    <div class="toast" id="t" role="status"></div>
+
+    <script>
+        (function () {
+            var t = document.getElementById('t'), to;
+            function toast(m) { t.textContent = m; t.classList.add('show'); clearTimeout(to); to = setTimeout(function () { t.classList.remove('show') }, 2600) }
+            var seg = document.querySelectorAll('.seg button');
+            var addressTitle = document.getElementById('atitle');
+            var addressText = document.getElementById('atext');
+            var addressEditor = document.getElementById('address-editor');
+            var addressInput = document.getElementById('address-input');
+            var editAddress = document.getElementById('edit-address');
+            var pickupAddress = 'Shama Medical Store, 45 W 34th St, New York, NY 10001';
+            var deliveryAddress = addressText.textContent.trim();
+
+            function closeAddressEditor() {
+                addressEditor.hidden = true;
+                editAddress.setAttribute('aria-expanded', 'false');
+            }
+
+            seg.forEach(function (b) {
+                b.addEventListener('click', function () {
+                    seg.forEach(function (x) { x.setAttribute('aria-pressed', x === b) });
+                    var p = b.dataset.m === 'pickup';
+                    addressTitle.textContent = p ? 'Pick up at' : 'Deliver to';
+                    addressText.textContent = p ? pickupAddress : deliveryAddress;
+                    closeAddressEditor();
+                })
+            });
+
+            editAddress.addEventListener('click', function () {
+                addressInput.value = addressText.textContent.trim();
+                addressEditor.hidden = false;
+                editAddress.setAttribute('aria-expanded', 'true');
+                addressInput.focus();
+            });
+
+            document.getElementById('save-address').addEventListener('click', function () {
+                var updatedAddress = addressInput.value.trim();
+                if (!updatedAddress) {
+                    toast('Enter an address before saving.');
+                    addressInput.focus();
+                    return;
+                }
+                if (addressTitle.textContent === 'Pick up at') {
+                    pickupAddress = updatedAddress;
+                } else {
+                    deliveryAddress = updatedAddress;
+                }
+                addressText.textContent = updatedAddress;
+                closeAddressEditor();
+            });
+
+            document.getElementById('cancel-address').addEventListener('click', closeAddressEditor);
+
+            var side = document.getElementById('sum'), tg = document.getElementById('tg');
+            tg.addEventListener('click', function () { var o = side.classList.toggle('open'); tg.setAttribute('aria-expanded', o); document.getElementById('tgl').textContent = o ? 'Hide' : 'Show' });
+            document.querySelectorAll('[data-order]').forEach(function (b) {
+                b.addEventListener('click', function () { toast('Order placed.'); })
+            });
+        })();
+    </script>
+</body>
+
+</html>
