@@ -89,6 +89,17 @@ def init_db():
         UNIQUE (name, strength, form, pack_size)
     );
 
+    CREATE TABLE IF NOT EXISTS product_details (
+        id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+        product_id BIGINT NOT NULL UNIQUE REFERENCES products(id) ON DELETE CASCADE,
+        description_uses TEXT,
+        side_effects_warnings TEXT,
+        dosage_information TEXT,
+        storage_care TEXT,
+        information_source TEXT,
+        last_reviewed_at DATE
+    );
+
     CREATE TABLE IF NOT EXISTS product_salts (
         id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
         product_id BIGINT NOT NULL REFERENCES products(id) ON DELETE CASCADE,

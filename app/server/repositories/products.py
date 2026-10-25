@@ -149,6 +149,55 @@ class ProductRepository:
             )
             return cur.fetchone()
 
+    def get_product_details(self, product_id: int):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT p.id, p.name, p.strength, p.form, p.pack_size, p.schedule,
+                       p.description, p.image_url, p.storage_condition,
+                       br.name AS brand, c.name AS category,
+                       COALESCE(stock.available_quantity, 0) AS available_quantity,
+                       (COALESCE(stock.available_quantity, 0) > 0) AS in_stock,
+                       price.mrp, price.discount_percent,
+                       pd.description_uses, pd.side_effects_warnings,
+                       pd.dosage_information, pd.storage_care,
+                       pd.information_source, pd.last_reviewed_at
+                FROM products p
+                LEFT JOIN brands br ON br.id = p.brand_id
+                LEFT JOIN categories c ON c.id = p.category_id
+                LEFT JOIN product_details pd ON pd.product_id = p.id
+                LEFT JOIN LATERAL (
+                    SELECT SUM(b.quantity) AS available_quantity
+                    FROM batches b
+                    WHERE b.product_id = p.id
+                      AND b.quantity > 0
+                      AND b.expiry_date >= CURRENT_DATE
+                ) stock ON TRUE
+                LEFT JOIN LATERAL (
+                    SELECT b.mrp, b.discount_percent
+                    FROM batches b
+                    WHERE b.product_id = p.id
+                      AND b.quantity > 0
+                      AND b.expiry_date >= CURRENT_DATE
+                    ORDER BY b.expiry_date, b.id
+                    LIMIT 1
+                ) price ON TRUE
+                WHERE p.id = %s AND p.is_active = TRUE
+                """,
+                (product_id,),
+            )
+            product = cur.fetchone()
+
+        if product is None:
+            return None
+
+        product["price"] = (
+            selling_price(product["mrp"], product["discount_percent"])
+            if product["mrp"] is not None
+            else None
+        )
+        return product
+
     def list_products(self, page: int = 1, page_size: int = 20):
         offset = (page - 1) * page_size
 

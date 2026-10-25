@@ -1,10 +1,14 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+import logging
+
+import psycopg
+from fastapi import APIRouter, HTTPException, Depends, Path, Query
 from auth import require_admin
 from database import get_db
 from repositories.products import ProductRepository
 from models.Product_model import AddProduct, UpdateProduct
 
 router = APIRouter(prefix="/products", tags=["products"])
+logger = logging.getLogger(__name__)
 
 @router.get("")
 def list_products(page: int = Query(1, ge=1),
@@ -29,6 +33,24 @@ def search_products(
             detail=f"No products found matching '{name}'.",
         )
     return result
+
+@router.get("/{product_id}/details")
+def get_product_details(
+    product_id: int = Path(gt=0),
+    conn=Depends(get_db),
+):
+    try:
+        product = ProductRepository(conn).get_product_details(product_id)
+    except psycopg.Error:
+        logger.exception("get_product_details failed")
+        raise HTTPException(
+            status_code=500,
+            detail="Could not fetch product details.",
+        )
+
+    if product is None:
+        raise HTTPException(status_code=404, detail="Product not found.")
+    return product
 
 @router.post("", status_code=201)
 def add_product(
