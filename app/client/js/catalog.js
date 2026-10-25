@@ -89,6 +89,7 @@ function isValidProduct(product) {
 }
 
 function renderProduct(product) {
+  const productId = Number(product.id);
   const name = escapeHtml(product.name.trim());
   const brand = escapeHtml(product.brand || "Brand not listed");
   const strength = escapeHtml(product.strength || "");
@@ -100,14 +101,14 @@ function renderProduct(product) {
     ? null
     : Math.round((mrp * (100 - discount) / 100 + Number.EPSILON) * 100) / 100;
 
-  return `<article class="product-card" data-product-id="${escapeHtml(product.id)}">
+  return `<article class="product-card" data-product-id="${productId}">
     <div class="product-img-box">
       ${imageUrl
         ? `<img src="${escapeHtml(imageUrl)}" alt="${name}" loading="lazy">`
         : '<i class="fa-solid fa-pills catalog-product-image-placeholder" aria-hidden="true"></i>'}
     </div>
     <div class="product-info">
-      <h2 class="product-name">${name}</h2>
+      <h2 class="product-name"><a class="product-detail-link" href="product_detail..html?id=${productId}">${name}</a></h2>
       <span class="product-brand">${brand}</span>
       ${strength ? `<span class="product-pack">${strength}</span>` : ""}
       <div class="product-meta-row">

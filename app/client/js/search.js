@@ -84,6 +84,7 @@ function isValidProduct(product) {
 }
 
 function renderProduct(product) {
+  const productId = Number(product.id);
   const mrp = Number(product.mrp);
   const discount = Number(product.discount_percentage ?? product.discount_percent ?? 0);
   const hasPrice = product.mrp !== null
@@ -119,7 +120,7 @@ function renderProduct(product) {
         </div>`
     : '<p class="price-unavailable">Price unavailable</p>';
 
-  return `<article class="card" data-product-id="${escapeHtml(product.id)}">
+  return `<article class="card" data-product-id="${productId}">
     <div class="card-img">
       ${imageUrl
         ? `<img src="${escapeHtml(imageUrl)}" alt="${name}" loading="lazy">`
@@ -129,7 +130,7 @@ function renderProduct(product) {
     </div>
     <div class="card-body">
       <span class="cat">${category}</span>
-      <h2 class="name">${name}</h2>
+      <h2 class="name"><a class="product-detail-link" href="product_detail..html?id=${productId}">${name}</a></h2>
       ${strength ? `<span class="strength">${strength}</span>` : ""}
       <span class="product-detail"><strong>Brand:</strong> ${brand}</span>
       ${manufacturer ? `<span class="product-detail"><strong>Manufacturer:</strong> ${manufacturer}</span>` : ""}

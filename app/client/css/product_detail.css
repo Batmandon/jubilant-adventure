@@ -131,15 +131,6 @@ body {
     flex-shrink: 0;
 }
 
-.pdp-rating {
-    font-size: 0.875rem;
-    color: #334155;
-}
-
-.pdp-rating i {
-    color: #f59e0b;
-}
-
 .pdp-stock-badge {
     background-color: #dcfce7;
     color: #15803d;
@@ -147,6 +138,11 @@ body {
     font-weight: 700;
     padding: 0.25rem 0.6rem;
     border-radius: 9999px;
+}
+
+.pdp-stock-badge.out-of-stock {
+    background-color: #fee2e2;
+    color: #b91c1c;
 }
 
 .pdp-brand-info {
@@ -279,6 +275,8 @@ body {
 }
 
 .tab-header-item {
+    border: 0;
+    font: inherit;
     padding: 0.85rem 1rem;
     text-align: center;
     font-size: 0.9rem;
@@ -288,6 +286,31 @@ body {
     background-color: #f1f5f9;
     border-bottom: 3px solid transparent;
     transition: all 0.2s ease;
+}
+
+.tab-header-item.active-hover-tab {
+    color: #0f172a;
+}
+
+.tab-header-item:focus-visible {
+    outline: 3px solid #0d9488;
+    outline-offset: -3px;
+}
+
+.detail-source {
+    display: block;
+    margin-top: 1rem;
+    color: #64748b;
+}
+
+.product-action-message {
+    min-height: 1.5rem;
+    color: #0f766e;
+    font-size: 0.875rem;
+}
+
+.product-action-message.is-error {
+    color: #b91c1c;
 }
 
 .tab-header-item:hover,
@@ -358,7 +381,7 @@ body {
 }
 
 /* Responsive Breakdown */
-@media (max-width: 40rem) {
+@media (max-width: 44rem) {
     .pdp-wrapper {
         grid-template-columns: 1fr;
     }
