@@ -1,7 +1,0 @@
-$kind: http-request
-name: List Salts
-method: GET
-url: '{{base_url}}/salts'
-order: 1000
-auth:
-  type: noauth

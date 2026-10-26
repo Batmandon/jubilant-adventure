@@ -1,8 +1,0 @@
-$kind: http-request
-name: Delete Address
-method: DELETE
-url: '{{base_url}}/addresses/{{address_id}}'
-order: 4000
-pathVariables:
-  - key: address_id
-    value: '1'

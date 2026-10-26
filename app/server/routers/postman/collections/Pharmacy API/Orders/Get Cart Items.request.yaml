@@ -1,5 +1,0 @@
-$kind: http-request
-name: Get Cart Items
-method: GET
-url: '{{base_url}}/orders/items'
-order: 2000

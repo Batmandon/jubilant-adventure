@@ -1,9 +1,0 @@
-name: Pharmacy Local
-variables:
-  - key: base_url
-    value: 'http://127.0.0.1:8000'
-    description: 'Base URL for the local FastAPI server'
-  - key: jwt_token
-    value: ''
-    description: 'JWT Bearer token — set this after logging in via POST /auth_routes/login'
-    sensitive: true

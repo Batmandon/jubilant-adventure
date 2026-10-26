@@ -1,8 +1,0 @@
-$kind: http-request
-name: Get Order
-method: GET
-url: '{{base_url}}/orders/{{order_id}}'
-order: 6000
-pathVariables:
-  - key: order_id
-    value: '1'

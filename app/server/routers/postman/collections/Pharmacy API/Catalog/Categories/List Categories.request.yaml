@@ -1,7 +1,0 @@
-$kind: http-request
-name: List Categories
-method: GET
-url: '{{base_url}}/categories'
-order: 1000
-auth:
-  type: noauth

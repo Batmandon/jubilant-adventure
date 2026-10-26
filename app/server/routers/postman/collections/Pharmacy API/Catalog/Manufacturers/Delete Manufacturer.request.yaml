@@ -1,8 +1,0 @@
-$kind: http-request
-name: Delete Manufacturer
-method: DELETE
-url: '{{base_url}}/manufacturers/{{item_id}}'
-order: 4000
-pathVariables:
-  - key: item_id
-    value: '1'
