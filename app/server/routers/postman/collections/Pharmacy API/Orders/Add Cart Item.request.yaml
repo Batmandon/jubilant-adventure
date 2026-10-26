@@ -1,0 +1,15 @@
+$kind: http-request
+name: Add Cart Item
+method: POST
+url: '{{base_url}}/orders/items'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "product_id": 1,
+      "quantity": 2
+    }

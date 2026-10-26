@@ -1,0 +1,15 @@
+$kind: http-request
+name: Place Order
+method: POST
+url: '{{base_url}}/orders'
+order: 4000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "address_id": 1,
+      "payment_method": "cod"
+    }

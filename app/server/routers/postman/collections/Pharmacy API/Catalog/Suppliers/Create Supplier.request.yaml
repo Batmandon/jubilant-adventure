@@ -1,0 +1,16 @@
+$kind: http-request
+name: Create Supplier
+method: POST
+url: '{{base_url}}/suppliers'
+order: 2000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "MedSupply Co",
+      "phone": "9876543210",
+      "gstin": "22AAAAA0000A1Z5"
+    }

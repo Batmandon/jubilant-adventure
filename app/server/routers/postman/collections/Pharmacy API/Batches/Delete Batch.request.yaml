@@ -1,0 +1,8 @@
+$kind: http-request
+name: Delete Batch
+method: DELETE
+url: '{{base_url}}/batches/{{batch_id}}'
+order: 3000
+pathVariables:
+  - key: batch_id
+    value: '1'

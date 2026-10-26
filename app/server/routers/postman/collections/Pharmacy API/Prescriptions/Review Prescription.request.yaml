@@ -1,0 +1,18 @@
+$kind: http-request
+name: Review Prescription
+method: PATCH
+url: '{{base_url}}/prescriptions/{{prescription_id}}/review'
+order: 2000
+pathVariables:
+  - key: prescription_id
+    value: '1'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "status": "approved",
+      "reject_reason": null
+    }

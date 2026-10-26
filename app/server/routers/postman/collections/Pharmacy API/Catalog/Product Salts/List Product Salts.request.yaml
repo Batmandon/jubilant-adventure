@@ -1,0 +1,7 @@
+$kind: http-request
+name: List Product Salts
+method: GET
+url: '{{base_url}}/product-salts'
+order: 1000
+auth:
+  type: noauth

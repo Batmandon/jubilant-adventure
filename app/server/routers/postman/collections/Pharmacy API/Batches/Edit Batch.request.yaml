@@ -1,0 +1,21 @@
+$kind: http-request
+name: Edit Batch
+method: PATCH
+url: '{{base_url}}/batches/{{batch_id}}'
+order: 2000
+pathVariables:
+  - key: batch_id
+    value: '1'
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "quantity": 80,
+      "purchase_price": 44.00,
+      "mrp": 58.00,
+      "discount_percent": 5,
+      "rack_location": "A1-C3"
+    }

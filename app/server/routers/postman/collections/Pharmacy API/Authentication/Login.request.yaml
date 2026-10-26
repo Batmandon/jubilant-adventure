@@ -1,0 +1,17 @@
+$kind: http-request
+name: Login
+method: POST
+url: '{{base_url}}/auth_routes/login'
+order: 2000
+auth:
+  type: noauth
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "john@example.com",
+      "password": "securepass123"
+    }

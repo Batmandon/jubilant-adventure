@@ -1,0 +1,12 @@
+$kind: http-request
+name: List Products
+method: GET
+url: '{{base_url}}/products'
+order: 1000
+auth:
+  type: noauth
+queryParams:
+  - key: page
+    value: '1'
+  - key: page_size
+    value: '20'

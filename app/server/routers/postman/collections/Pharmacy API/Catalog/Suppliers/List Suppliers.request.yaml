@@ -1,0 +1,7 @@
+$kind: http-request
+name: List Suppliers
+method: GET
+url: '{{base_url}}/suppliers'
+order: 1000
+auth:
+  type: noauth

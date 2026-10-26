@@ -1,0 +1,23 @@
+$kind: http-request
+name: Create Batch
+method: POST
+url: '{{base_url}}/batches'
+order: 1000
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |-
+    {
+      "product_id": 1,
+      "batch_no": "BATCH-001",
+      "mfg_date": "2025-01-01",
+      "expiry_date": "2027-01-01",
+      "quantity": 100,
+      "purchase_price": 45.00,
+      "mrp": 60.00,
+      "discount_percent": 0,
+      "supplier_id": 1,
+      "rack_location": "A1-B2"
+    }

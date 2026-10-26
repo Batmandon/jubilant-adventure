@@ -12,3 +12,4 @@ app/server/uploads/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.readme.md/

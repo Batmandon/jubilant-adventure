@@ -1,0 +1,7 @@
+$kind: http-request
+name: List Manufacturers
+method: GET
+url: '{{base_url}}/manufacturers'
+order: 1000
+auth:
+  type: noauth

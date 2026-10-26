@@ -1,0 +1,5 @@
+$kind: http-request
+name: List Stock Alerts
+method: GET
+url: '{{base_url}}/batches/stock-alerts'
+order: 4000
