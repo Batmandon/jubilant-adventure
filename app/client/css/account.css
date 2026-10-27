@@ -196,6 +196,11 @@ button, input { font: inherit; }
   box-shadow: none;
 }
 
+/* a field that can never be edited (email) always looks locked, even in edit mode */
+.input-wrap input[readonly] { background: var(--bg); cursor: default; }
+.input-wrap input[readonly]:focus { border-color: var(--border); box-shadow: none; }
+.hint-inline { font-weight: 400; color: var(--muted); font-size: 0.78rem; }
+
 .error {
   display: block;
   min-height: 16px;

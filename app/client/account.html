@@ -11,9 +11,8 @@
   <link rel="stylesheet" href="css/components.css">
 </head>
 <body>
-    <div id="navbar-placeholder"></div>
 
-  <!-- Navbar component (navbar.html) loads here -->
+  <div id="navbar-placeholder"></div>
 
   <main class="page">
 
@@ -77,7 +76,7 @@
                 <label for="first_name">First Name</label>
                 <div class="input-wrap">
                   <i class="fa-regular fa-user" aria-hidden="true"></i>
-                  <input type="text" id="first_name" name="first_name" maxlength="50" autocomplete="given-name" readonly>
+                  <input type="text" id="first_name" name="first_name" maxlength="20" autocomplete="given-name" readonly>
                 </div>
                 <small class="error"></small>
               </div>
@@ -85,7 +84,7 @@
                 <label for="last_name">Last Name</label>
                 <div class="input-wrap">
                   <i class="fa-regular fa-user" aria-hidden="true"></i>
-                  <input type="text" id="last_name" name="last_name" maxlength="50" autocomplete="family-name" readonly>
+                  <input type="text" id="last_name" name="last_name" maxlength="20" autocomplete="family-name" readonly>
                 </div>
                 <small class="error"></small>
               </div>
@@ -101,7 +100,7 @@
                 <small class="error"></small>
               </div>
               <div class="field">
-                <label for="email">Email</label>
+                <label for="email">Email <span class="hint-inline">(cannot be changed)</span></label>
                 <div class="input-wrap">
                   <i class="fa-regular fa-envelope" aria-hidden="true"></i>
                   <input type="email" id="email" name="email" autocomplete="email" readonly>
@@ -272,9 +271,9 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <div id="footer-placeholder"></div>
+  <div id="footer-placeholder"></div>    
   <script src="js/config.js" defer></script>
-  <script src="js/account.js"></script>
   <script src="js/components.js" defer></script>
+  <script src="js/account.js" defer></script>
 </body>
 </html>

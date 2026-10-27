@@ -7,10 +7,10 @@ const CONFIG = {
 };
 
 const PATHS = {
-  profile: "/account/profile",         // GET, PUT
+  profile: "/auth_routes/profile",     // GET, PUT
   addresses: "/addresses",             // GET, POST | PUT, DELETE /:id
   orders: "/account/orders",           // GET
-  logout: "/logout",                   // POST
+  logout: "/auth_routes/logout",       // POST
 };
 
 // ===================== API LAYER =====================
@@ -136,8 +136,8 @@ function confirmAction({ title, text, confirmLabel }) {
 
 // ===================== VALIDATION (keep the same as your backend rules) =====================
 const rules = {
-  first_name: (v) => !v ? "First name is required." : !/^[A-Za-z\s.'-]{1,50}$/.test(v) ? "Use letters only (max 50)." : "",
-  last_name: (v) => !v ? "Last name is required." : !/^[A-Za-z\s.'-]{1,50}$/.test(v) ? "Use letters only (max 50)." : "",
+  first_name: (v) => !v ? "First name is required." : !/^[A-Za-z\s.'-]{1,20}$/.test(v) ? "Use letters only (max 20)." : "",
+  last_name: (v) => !v ? "Last name is required." : !/^[A-Za-z\s.'-]{1,20}$/.test(v) ? "Use letters only (max 20)." : "",
   phone: (v) => !v ? "Mobile number is required." : !/^[6-9]\d{9}$/.test(v) ? "Enter a valid 10-digit mobile number." : "",
   email: (v) => !v ? "Email is required." : !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? "Enter a valid email address." : "",
   line: (v) => !v ? "Address is required." : v.length < 5 ? "Address is too short." : v.length > 300 ? "Address is too long (max 300)." : "",
@@ -242,7 +242,7 @@ function renderOverview() {
 
 function setProfileEditing(on) {
   profileForm.classList.toggle("is-readonly", !on);
-  profileInputs.forEach((i) => { i.readOnly = !on; });
+  profileInputs.forEach((i) => { i.readOnly = !on || i.name === "email"; }); // email is never editable
   $("profile-actions").hidden = !on;
   $("edit-profile-btn").hidden = on;
   if (on) profileInputs[0].focus();
@@ -264,12 +264,15 @@ profileForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   clearMessage(profileMsg);
 
-  if (!validateInputs(profileInputs)) {
+  // email is read-only: it is not validated and not sent (the backend rejects extra fields)
+  const editableInputs = profileInputs.filter((i) => i.name !== "email");
+
+  if (!validateInputs(editableInputs)) {
     showMessage(profileMsg, "Please fix the highlighted fields.", "error");
     return;
   }
 
-  const body = Object.fromEntries(profileInputs.map((i) => [i.name, i.value.trim()]));
+  const body = Object.fromEntries(editableInputs.map((i) => [i.name, i.value.trim()]));
   const btn = $("save-profile-btn");
   setBusy(btn, true, "Saving...");
 
