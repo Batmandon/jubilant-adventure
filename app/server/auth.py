@@ -1,4 +1,4 @@
-from models.Authmodel import RegisterAccount, LoginCredentials
+from models.Authmodel import RegisterAccount, LoginCredentials, UpdateProfile
 from database import get_db, get_db_connection
 from utils.utils import hash_password, verify_password
 from services.jwt import create_access_token, create_refresh_token, decode_token
@@ -116,6 +116,39 @@ def login_credentials(userlogin: LoginCredentials, conn, response: Response):
         }
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~Profile Operations~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def get_profile(email: str, conn):
+    with conn.cursor() as cur:
+        user = get_user(cur, email, ("first_name", "last_name", "email", "phone"))
+
+        if user is None:
+            return {"error": "Authenticated user no longer exists.", "status_code": 401}
+
+        return user
+
+def update_profile(email: str, profile: UpdateProfile, conn):
+    # UPDATE, not INSERT: the user row already exists (created at register).
+    # An INSERT here would try to create a second user with the same email.
+    # WHERE email = ... means only the logged-in user's own row can change.
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            UPDATE users
+            SET first_name = %s, last_name = %s, phone = %s, updated_at = now()
+            WHERE email = %s
+            RETURNING first_name, last_name, email, phone
+            """,
+            (profile.first_name, profile.last_name, profile.phone, email),
+        )
+        row = cur.fetchone()
+
+        if row is None:
+            return {"error": "Authenticated user no longer exists.", "status_code": 401}
+
+        return row
+
+
 def get_user_info_from_request(request: Request):
     token = request.cookies.get("access_token")
 
@@ -176,14 +209,14 @@ def logout(response: Response):
     response.delete_cookie(
         key="access_token",
         httponly=True,
-        samesite="none",
-        secure=True
+        samesite="none" if IS_PRODUCTION else "lax",
+        secure=IS_PRODUCTION
     )
 
     response.delete_cookie(
         key="refresh_token",
         httponly=True,
-        samesite="none",
-        secure=True
+        samesite="none" if IS_PRODUCTION else "lax",
+        secure=IS_PRODUCTION
     )
     return {"message": "Logged out successfully"}
