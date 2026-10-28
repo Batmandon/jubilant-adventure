@@ -5,18 +5,25 @@ from fastapi import APIRouter, HTTPException, Depends, Path, Query
 from auth import require_admin
 from database import get_db
 from repositories.products import ProductRepository
-from models.Product_model import AddProduct, UpdateProduct
+from repositories.batch import BatchRepository
+from models.Batch_model import CreateBatch, EditBatch
+from models.ProductWithBatch_model import ProductWithBatch, UpdateProductWithBatch
 
-router = APIRouter(prefix="/products", tags=["products"])
+# One router for both products and batches.
+# No prefix here, so every path is written in full (URLs stay the same as before).
+router = APIRouter(tags=["products"])
 logger = logging.getLogger(__name__)
 
-@router.get("")
+
+# ---------- Public ----------
+
+@router.get("/products")
 def list_products(page: int = Query(1, ge=1),
                   page_size: int = Query(20, ge=1, le=100),
                   conn=Depends(get_db)):
     return ProductRepository(conn).list_products(page, page_size)
 
-@router.get("/search")
+@router.get("/products/search")
 def search_products(
     name: str = Query(..., min_length=1, max_length=100),
     page: int = Query(1, ge=1),
@@ -34,7 +41,7 @@ def search_products(
         )
     return result
 
-@router.get("/{product_id}/details")
+@router.get("/products/{product_id}/details")
 def get_product_details(
     product_id: int = Path(gt=0),
     conn=Depends(get_db),
@@ -52,31 +59,116 @@ def get_product_details(
         raise HTTPException(status_code=404, detail="Product not found.")
     return product
 
-@router.post("", status_code=201)
+
+# ---------- Admin: product + first batch (ONE transaction) ----------
+
+@router.post("/products", status_code=201)
 def add_product(
-    product: AddProduct, admin=Depends(require_admin), conn=Depends(get_db),
+    data: ProductWithBatch, admin=Depends(require_admin), conn=Depends(get_db),
 ):
-    created_product = ProductRepository(conn).add_product(product)
-    if "error" in created_product:
-        raise HTTPException(status_code=403, detail=created_product["error"])
+    # Both inserts use the same `conn` (same request = same transaction).
+    # If anything below raises, get_db exits with an exception and psycopg rolls back,
+    # so a product is never saved without its batch.
+    try:
+        created_product = ProductRepository(conn).add_product(data.product)
+    except psycopg.errors.UniqueViolation:
+        raise HTTPException(
+            status_code=409,
+            detail="This product (same name, strength, form and pack size) already exists.",
+        )
+
+    batch = CreateBatch(product_id=created_product["id"], **data.batch.model_dump())
+    created_batch = BatchRepository(conn).create_batch(batch)
+    if "error" in created_batch:
+        raise HTTPException(
+            status_code=created_batch["status_code"],
+            detail=created_batch["error"],
+        )
+
     return {
-        "message": "Product added successfully",
+        "message": "Product and batch added successfully",
         "product_id": created_product["id"],
-        "product": product,
+        "batch_id": created_batch["id"],
     }
 
-@router.put("/{product_id}")
-def update_product(product_id: int, product: UpdateProduct, admin=Depends(require_admin), conn=Depends(get_db)):
-    service = ProductRepository(conn)
-    result = service.update_product(product_id, product)
-    if "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"])
-    return {"message": "Product updated successfully", "product": product}
+@router.put("/products/{product_id}")
+def update_product(product_id: int, data: UpdateProductWithBatch, admin=Depends(require_admin), conn=Depends(get_db)):
+    # Send only what changed: product fields, one batch (batch_id + batch), or both.
+    # Everything runs in one transaction; any error rolls back both.
+    try:
+        if data.product is not None:
+            result = ProductRepository(conn).update_product(product_id, data.product)
+            if "error" in result:
+                raise HTTPException(status_code=404, detail=result["error"])
 
-@router.delete("/{product_id}")
+        if data.batch is not None:
+            batches = BatchRepository(conn)
+            if not batches.batch_belongs_to_product(data.batch_id, product_id):
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Batch {data.batch_id} does not exist for product {product_id}.",
+                )
+            result = batches.edit_batch(data.batch_id, data.batch)
+            if "error" in result:
+                raise HTTPException(status_code=result["status_code"], detail=result["error"])
+    except psycopg.errors.UniqueViolation:
+        raise HTTPException(
+            status_code=409,
+            detail="Another product with the same name, strength, form and pack size already exists.",
+        )
+
+    return {
+        "message": "Updated successfully",
+        "updated": {"product": data.product is not None, "batch": data.batch is not None},
+    }
+
+@router.delete("/products/{product_id}")
 def delete_product(product_id: int, admin=Depends(require_admin), conn=Depends(get_db)):
     service = ProductRepository(conn)
-    result = service.delete_product(product_id)
+    try:
+        result = service.delete_product(product_id)
+    except psycopg.errors.ForeignKeyViolation:
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot delete: this product still has batches, cart items or orders.",
+        )
     if "error" in result:
         raise HTTPException(status_code=404, detail=result["error"])
     return {"message": "Product deleted successfully"}
+
+
+# ---------- Admin: batches of an existing product ----------
+
+@router.post("/batches", status_code=201)
+def create_batch(batch: CreateBatch, admin=Depends(require_admin), conn=Depends(get_db)):
+    result = BatchRepository(conn).create_batch(batch)
+    if "error" in result:
+        raise HTTPException(
+            status_code=result["status_code"],
+            detail=result["error"],
+        )
+    return {"message": "Batch created successfully", "batch_id": result["id"]}
+
+@router.patch("/batches/{batch_id}")
+def edit_batch(batch_id: int, batch: EditBatch, admin=Depends(require_admin), conn=Depends(get_db)):
+    result = BatchRepository(conn).edit_batch(batch_id, batch)
+    if "error" in result:
+        raise HTTPException(
+            status_code=result["status_code"],
+            detail=result["error"],
+        )
+    return {"message": "Batch updated successfully"}
+
+@router.delete("/batches/{batch_id}")
+def delete_batch(batch_id: int, admin=Depends(require_admin), conn=Depends(get_db)):
+    result = BatchRepository(conn).delete_batch(batch_id)
+    if "error" in result:
+        raise HTTPException(
+            status_code=result["status_code"],
+            detail=result["error"],
+        )
+    return {"message": "Batch deleted successfully"}
+
+@router.get("/batches/stock-alerts")
+def list_stock_alerts(admin=Depends(require_admin), conn=Depends(get_db)):
+    return BatchRepository(conn).list_stock_alerts()
