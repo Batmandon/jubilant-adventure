@@ -206,6 +206,34 @@ def init_db():
     BEFORE UPDATE ON products
     FOR EACH ROW
     EXECUTE FUNCTION set_updated_at();
+
+    CREATE OR REPLACE FUNCTION sync_product_active()
+    RETURNS trigger AS $$
+    BEGIN
+        IF TG_OP IN ('UPDATE', 'DELETE') THEN
+            UPDATE products
+            SET is_active = EXISTS (
+                SELECT 1 FROM batches WHERE product_id = OLD.product_id AND quantity > 0
+            )
+            WHERE id = OLD.product_id;
+        END IF;
+        IF TG_OP IN ('INSERT', 'UPDATE') THEN
+            UPDATE products
+            SET is_active = EXISTS (
+                SELECT 1 FROM batches WHERE product_id = NEW.product_id AND quantity > 0
+            )
+            WHERE id = NEW.product_id;
+        END IF;
+        RETURN NULL;
+    END;
+    $$ LANGUAGE plpgsql;
+
+    DROP TRIGGER IF EXISTS trg_batches_sync_active ON batches;
+
+    CREATE TRIGGER trg_batches_sync_active
+    AFTER INSERT OR UPDATE OR DELETE ON batches
+    FOR EACH ROW
+    EXECUTE FUNCTION sync_product_active();
     """
 )
  
