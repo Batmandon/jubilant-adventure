@@ -74,15 +74,41 @@ class ProductRepository:
     def __init__(self, conn):
         self.conn = conn
 
+    def _get_or_create(self, cur, table: str, name: str):
+        if table not in ("categories", "manufacturers", "salts"):
+            raise ValueError("Invalid lookup table")
+        cur.execute(
+            f"""
+            INSERT INTO {table} (name) VALUES (%s)
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+            RETURNING id
+            """,
+            (name,),
+        )
+        return cur.fetchone()["id"]
+
+    def _save_salts(self, cur, product_id: int, salts):
+        cur.execute("DELETE FROM product_salts WHERE product_id = %s", (product_id,))
+        for salt in salts:
+            salt_id = self._get_or_create(cur, "salts", salt.name)
+            cur.execute(
+                "INSERT INTO product_salts (product_id, salt_id, strength) VALUES (%s, %s, %s)",
+                (product_id, salt_id, salt.strength),
+            )
+
     def add_product(self, product: AddProduct):
         with self.conn.cursor() as cur:
+            category_id = self._get_or_create(cur, "categories", product.category)
+            manufacturer_id = self._get_or_create(cur, "manufacturers", product.manufacturer)
             cur.execute(
                 """
-                INSERT INTO products (name, strength, form, pack_size, schedule, gst_percent, hsn_code, storage_condition, description, image_url)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO products (category_id, manufacturer_id, name, strength, form, pack_size, schedule, gst_percent, hsn_code, storage_condition, description, image_url)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 RETURNING id
                 """,
                 (
+                    category_id,
+                    manufacturer_id,
                     product.name,
                     product.strength,
                     product.form,
@@ -95,32 +121,33 @@ class ProductRepository:
                     product.image_url
                 )
             )
-            return {"id": cur.fetchone()["id"]}
+            product_id = cur.fetchone()["id"]
+            self._save_salts(cur, product_id, product.salts)
+            return {"id": product_id}
 
     def update_product(self, product_id: int, product: UpdateProduct):
+        sent = product.model_fields_set
+        changes = product.model_dump(
+            exclude_unset=True, exclude={"salts", "category", "manufacturer"}
+        )
         with self.conn.cursor() as cur:
-            cur.execute(
-                """
-                UPDATE products
-                SET name = %s, strength = %s, form = %s, pack_size = %s, schedule = %s, gst_percent = %s, hsn_code = %s, storage_condition = %s, description = %s, image_url = %s
-                WHERE id = %s
-                """,
-                (
-                    product.name,
-                    product.strength,
-                    product.form,
-                    product.pack_size,
-                    product.schedule,
-                    product.gst_percent,
-                    product.hsn_code,
-                    product.storage_condition,
-                    product.description,
-                    product.image_url,
-                    product_id
-                )
-            )
-            if cur.rowcount == 0:
+            cur.execute("SELECT 1 FROM products WHERE id = %s FOR UPDATE", (product_id,))
+            if cur.fetchone() is None:
                 return {"error": f"Product with ID {product_id} does not exist."}
+
+            if "category" in sent:
+                changes["category_id"] = self._get_or_create(cur, "categories", product.category)
+            if "manufacturer" in sent:
+                changes["manufacturer_id"] = self._get_or_create(cur, "manufacturers", product.manufacturer)
+
+            if changes:
+                assignments = ", ".join(f"{column} = %s" for column in changes)
+                cur.execute(
+                    f"UPDATE products SET {assignments} WHERE id = %s",
+                    (*changes.values(), product_id),
+                )
+            if "salts" in sent:
+                self._save_salts(cur, product_id, product.salts)
             return {"updated": True}
 
     def delete_product(self, product_id: int):

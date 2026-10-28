@@ -141,6 +141,14 @@ class BatchRepository:
             )
             return {"updated": True}
 
+    def batch_belongs_to_product(self, batch_id: int, product_id: int):
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT 1 FROM batches WHERE id = %s AND product_id = %s",
+                (batch_id, product_id),
+            )
+            return cur.fetchone() is not None
+
     def delete_batch(self, batch_id: int):
         with self.conn.cursor() as cur:
             cur.execute("DELETE FROM batches WHERE id = %s", (batch_id,))
