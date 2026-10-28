@@ -4,10 +4,10 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
-class CreateBatch(BaseModel):
+class NewBatch(BaseModel):
+    """Batch fields without product_id (used when the product is created together with its batch)."""
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    product_id: int = Field(gt=0)
     batch_no: str = Field(min_length=1, max_length=100)
     mfg_date: date | None = None
     expiry_date: date
@@ -29,6 +29,10 @@ class CreateBatch(BaseModel):
         ):
             raise ValueError("purchase_price cannot exceed mrp")
         return self
+
+
+class CreateBatch(NewBatch):
+    product_id: int = Field(gt=0)
 
 
 class EditBatch(BaseModel):
