@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, Path, status, Query
 from database import get_db
 from models.Order_model import AddCartItem, PlaceOrder
-from auth import get_current_user
+from auth import get_current_user, require_admin
+from repositories.admin_products import AdminProductRepository
 
 from repositories.order import (
     AddressNotFound,
@@ -186,3 +187,29 @@ def get_order(
     if order is None:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
+
+
+# ---------- Admin dashboard ----------
+# Second router in this file (different prefix + admin-only). Include it in main.py too.
+admin_router = APIRouter(
+    prefix="/admin",
+    tags=["admin-orders"],
+    dependencies=[Depends(require_admin)],
+)
+
+
+@admin_router.get("/dashboard")
+def dashboard(
+    recent_limit: int = Query(10, ge=1, le=50),
+    conn=Depends(get_db),
+):
+    try:
+        orders = OrderRepository(conn)
+        stats = orders.get_dashboard_stats()
+        recent_orders = orders.list_recent_orders(recent_limit)
+        counts = AdminProductRepository(conn).get_counts()
+    except psycopg.Error:
+        logger.exception("dashboard failed")
+        raise HTTPException(status_code=500, detail="Could not load dashboard")
+
+    return {**stats, **counts, "recent_orders": recent_orders}

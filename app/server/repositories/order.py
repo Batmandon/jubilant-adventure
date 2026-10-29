@@ -412,3 +412,37 @@ class OrderRepository:
             order["items"] = cur.fetchall()
 
         return order
+
+    # ---------- Admin dashboard ----------
+
+    def get_dashboard_stats(self) -> dict:
+        """today / pending / revenue in ONE query (FILTER = a WHERE for a single aggregate)."""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    COUNT(*) FILTER (
+                        WHERE created_at >= date_trunc('day', now() AT TIME ZONE 'Asia/Kolkata')
+                                            AT TIME ZONE 'Asia/Kolkata'
+                    ) AS today_orders,
+                    COUNT(*) FILTER (WHERE status = 'pending') AS pending_orders,
+                    COALESCE(SUM(total) FILTER (WHERE status = 'delivered'), 0) AS revenue
+                FROM orders
+                """
+            )
+            return cur.fetchone()
+
+    def list_recent_orders(self, limit: int = 10) -> list:
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT o.id, o.status, o.total, o.payment_method, o.created_at,
+                       u.first_name || ' ' || u.last_name AS customer
+                FROM orders o
+                JOIN users u ON u.id = o.user_id
+                ORDER BY o.created_at DESC, o.id DESC
+                LIMIT %s
+                """,
+                (limit,),
+            )
+            return cur.fetchall()
