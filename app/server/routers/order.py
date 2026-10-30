@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Path, status, Query
 from database import get_db
-from models.Order_model import AddCartItem, PlaceOrder
+from models.Order_model import AddCartItem, OrderStatus, PlaceOrder, UpdateOrderStatus
 from auth import get_current_user, require_admin
 from repositories.admin_products import AdminProductRepository
 
@@ -189,6 +189,28 @@ def get_order(
     return order
 
 
+@router.post("/{order_id}/cancel")
+def cancel_order(
+    order_id: int = Path(gt=0),
+    user=Depends(get_current_user),
+    conn=Depends(get_db),
+):
+    repository = OrderRepository(conn)
+    user_id = repository.get_user_id(user["sub"])
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Authenticated user no longer exists.")
+
+    try:
+        result = repository.cancel_order(order_id, user_id)
+    except psycopg.Error:
+        logger.exception("cancel_order failed")
+        raise HTTPException(status_code=500, detail="Could not cancel order")
+
+    if "error" in result:
+        raise HTTPException(status_code=result["status_code"], detail=result["error"])
+    return {"message": "Order cancelled successfully", "order_id": order_id, "status": "cancelled"}
+
+
 # ---------- Admin dashboard ----------
 # Second router in this file (different prefix + admin-only). Include it in main.py too.
 admin_router = APIRouter(
@@ -199,17 +221,45 @@ admin_router = APIRouter(
 
 
 @admin_router.get("/dashboard")
-def dashboard(
-    recent_limit: int = Query(10, ge=1, le=50),
-    conn=Depends(get_db),
-):
+def dashboard(conn=Depends(get_db)):
     try:
-        orders = OrderRepository(conn)
-        stats = orders.get_dashboard_stats()
-        recent_orders = orders.list_recent_orders(recent_limit)
+        stats = OrderRepository(conn).get_dashboard_stats()
         counts = AdminProductRepository(conn).get_counts()
     except psycopg.Error:
         logger.exception("dashboard failed")
         raise HTTPException(status_code=500, detail="Could not load dashboard")
 
-    return {**stats, **counts, "recent_orders": recent_orders}
+    return {**stats, **counts}
+
+
+@admin_router.get("/orders")
+def admin_list_orders(
+    status_filter: OrderStatus | None = Query(None, alias="status"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    conn=Depends(get_db),
+):
+    try:
+        return OrderRepository(conn).list_all_orders(
+            status_filter.value if status_filter else None, page, page_size
+        )
+    except psycopg.Error:
+        logger.exception("admin_list_orders failed")
+        raise HTTPException(status_code=500, detail="Could not fetch orders")
+
+
+@admin_router.patch("/orders/{order_id}/status")
+def update_order_status(
+    body: UpdateOrderStatus,
+    order_id: int = Path(gt=0),
+    conn=Depends(get_db),
+):
+    try:
+        result = OrderRepository(conn).update_order_status(order_id, body.status.value)
+    except psycopg.Error:
+        logger.exception("update_order_status failed")
+        raise HTTPException(status_code=500, detail="Could not update order status")
+
+    if "error" in result:
+        raise HTTPException(status_code=result["status_code"], detail=result["error"])
+    return {"message": "Order status updated", "order_id": order_id, "status": result["status"]}

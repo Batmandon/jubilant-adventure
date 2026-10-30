@@ -6,6 +6,20 @@ from repositories.pricing import selling_price
 # prescription flow is built.
 RX_SCHEDULES = {"H", "H1", "X"}
 
+# Order status flow: it can only move forward (skipping steps is fine, e.g. pickup
+# orders can go pending -> delivered). "delivered" and "cancelled" are final.
+ORDER_STATUS_STEPS = ["pending", "confirmed", "processing", "shipped", "delivered"]
+ADMIN_CANCELLABLE = {"pending", "confirmed", "processing", "shipped"}
+CUSTOMER_CANCELLABLE = {"pending"}
+
+
+def can_change_status(current: str, new: str) -> bool:
+    if new == "cancelled":
+        return current in ADMIN_CANCELLABLE
+    if current not in ORDER_STATUS_STEPS or new not in ORDER_STATUS_STEPS:
+        return False
+    return ORDER_STATUS_STEPS.index(new) > ORDER_STATUS_STEPS.index(current)
+
 
 class OrderError(Exception):
     """Base class for expected order problems. The router maps these to HTTP errors."""
@@ -432,7 +446,9 @@ class OrderRepository:
             )
             return cur.fetchone()
 
-    def list_recent_orders(self, limit: int = 10) -> list:
+    def list_all_orders(self, status: str | None = None, page: int = 1, page_size: int = 20) -> dict:
+        """Admin: orders of ALL customers, newest first. Optional status filter."""
+        offset = (page - 1) * page_size
         with self.conn.cursor() as cur:
             cur.execute(
                 """
@@ -440,9 +456,81 @@ class OrderRepository:
                        u.first_name || ' ' || u.last_name AS customer
                 FROM orders o
                 JOIN users u ON u.id = o.user_id
+                WHERE (%s::text IS NULL OR o.status = %s::text)
                 ORDER BY o.created_at DESC, o.id DESC
-                LIMIT %s
+                LIMIT %s OFFSET %s
                 """,
-                (limit,),
+                (status, status, page_size, offset),
             )
-            return cur.fetchall()
+            items = cur.fetchall()
+
+            cur.execute(
+                "SELECT COUNT(*) AS total FROM orders WHERE (%s::text IS NULL OR status = %s::text)",
+                (status, status),
+            )
+            total = cur.fetchone()["total"]
+
+        return {"items": items, "page": page, "page_size": page_size, "total": total}
+
+    # ---------- Status change / cancel ----------
+
+    def restore_stock(self, order_id: int) -> int:
+        """Put the quantity of every item of this order back into the batch it was taken from.
+        Used by every cancel (admin and customer). Returns how many batches were updated."""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE batches b
+                SET quantity = b.quantity + items.quantity
+                FROM (
+                    SELECT batch_id, SUM(quantity)::int AS quantity
+                    FROM order_items
+                    WHERE order_id = %s
+                    GROUP BY batch_id
+                ) items
+                WHERE b.id = items.batch_id
+                """,
+                (order_id,),
+            )
+            return cur.rowcount
+
+    def update_order_status(self, order_id: int, new_status: str):
+        """Admin: change the status of any order. Cancelling also restores stock."""
+        with self.conn.cursor() as cur:
+            # Lock the order row so two people cannot change (or cancel) it at the same time.
+            cur.execute("SELECT status FROM orders WHERE id = %s FOR UPDATE", (order_id,))
+            order = cur.fetchone()
+            if order is None:
+                return {"error": f"Order with ID {order_id} does not exist.", "status_code": 404}
+
+            current = order["status"]
+            if not can_change_status(current, new_status):
+                return {
+                    "error": f"Cannot change order status from {current} to {new_status}.",
+                    "status_code": 409,
+                }
+
+            if new_status == "cancelled":
+                self.restore_stock(order_id)
+            cur.execute("UPDATE orders SET status = %s WHERE id = %s", (new_status, order_id))
+            return {"id": order_id, "status": new_status}
+
+    def cancel_order(self, order_id: int, user_id: int):
+        """Customer: cancel their OWN order, only while it is still pending."""
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT status FROM orders WHERE id = %s AND user_id = %s FOR UPDATE",
+                (order_id, user_id),
+            )
+            order = cur.fetchone()
+            if order is None:
+                return {"error": f"Order with ID {order_id} does not exist.", "status_code": 404}
+            if order["status"] not in CUSTOMER_CANCELLABLE:
+                return {
+                    "error": f"A {order['status']} order cannot be cancelled. Please contact the store.",
+                    "status_code": 409,
+                }
+
+            self.restore_stock(order_id)
+            cur.execute("UPDATE orders SET status = 'cancelled' WHERE id = %s", (order_id,))
+            return {"id": order_id, "status": "cancelled"}

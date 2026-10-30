@@ -23,3 +23,18 @@ class PlaceOrder(BaseModel):
         if self.payment_method == PaymentMethod.cod and self.address_id is None:
             raise ValueError("address_id is required for cash/card on delivery.")
         return self
+
+
+class OrderStatus(str, Enum):
+    pending = "pending"
+    confirmed = "confirmed"
+    processing = "processing"
+    shipped = "shipped"
+    delivered = "delivered"
+    cancelled = "cancelled"
+
+
+class UpdateOrderStatus(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: OrderStatus
