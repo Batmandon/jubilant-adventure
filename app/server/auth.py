@@ -120,7 +120,7 @@ def login_credentials(userlogin: LoginCredentials, conn, response: Response):
 
 def get_profile(email: str, conn):
     with conn.cursor() as cur:
-        user = get_user(cur, email, ("first_name", "last_name", "email", "phone"))
+        user = get_user(cur, email, ("first_name", "last_name", "email", "phone", "role"))
 
         if user is None:
             return {"error": "Authenticated user no longer exists.", "status_code": 401}
