@@ -8,13 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="css/dashboard.css">
-  <link rel="stylesheet" href="css/components.css">
-    
 </head>
 <body>
-
-  <div id="navbar-placeholder"></div>
-
 
   <div class="admin">
 
@@ -26,14 +21,22 @@
         <button type="button" class="nav-item active" data-view="overview">
           <i class="fa-solid fa-chart-pie" aria-hidden="true"></i><span>Overview</span>
         </button>
+        <button type="button" class="nav-item" data-view="orders">
+          <i class="fa-solid fa-box-open" aria-hidden="true"></i><span>Orders</span>
+        </button>
         <button type="button" class="nav-item" data-view="products">
           <i class="fa-solid fa-pills" aria-hidden="true"></i><span>Products</span>
         </button>
       </nav>
 
-      <button type="button" class="nav-item nav-logout" id="logout-btn">
-        <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i><span>Logout</span>
-      </button>
+      <div class="nav-bottom">
+        <a href="index.html" class="nav-item" id="view-store-link">
+          <i class="fa-solid fa-store" aria-hidden="true"></i><span>View store</span>
+        </a>
+        <button type="button" class="nav-item" id="logout-btn">
+          <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i><span>Logout</span>
+        </button>
+      </div>
     </aside>
 
     <!-- ===== Main ===== -->
@@ -69,7 +72,12 @@
         </div>
 
         <section class="card">
-          <h2 class="card-title">Recent orders</h2>
+          <div class="card-head">
+            <h2 class="card-title">Recent orders</h2>
+            <button type="button" class="link-btn" data-view-link="orders">
+              View all orders <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </button>
+          </div>
           <div class="table-wrap">
             <table class="table">
               <thead>
@@ -125,6 +133,49 @@
 
       </section>
 
+      <!-- ===== ORDERS ===== -->
+      <section id="view-orders" hidden>
+
+        <div class="toolbar">
+          <select id="order-status-filter" class="input select" aria-label="Filter orders by status">
+            <option value="">All orders</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+
+        <section class="card">
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th scope="col">Order</th>
+                  <th scope="col">Customer</th>
+                  <th scope="col">Date</th>
+                  <th scope="col">Payment</th>
+                  <th scope="col" class="num">Total</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Change status</th>
+                </tr>
+              </thead>
+              <tbody id="order-body"></tbody>
+            </table>
+          </div>
+          <p class="empty" id="order-empty" hidden>No orders found.</p>
+
+          <div class="pager">
+            <button type="button" class="btn btn-ghost btn-sm" id="order-prev">Previous</button>
+            <span class="muted" id="order-page-info"></span>
+            <button type="button" class="btn btn-ghost btn-sm" id="order-next">Next</button>
+          </div>
+        </section>
+
+      </section>
+
     </main>
   </div>
 
@@ -136,6 +187,18 @@
       <td data-f="date"></td>
       <td data-f="total" class="num"></td>
       <td><span class="status" data-f="status"></span></td>
+    </tr>
+  </template>
+
+  <template id="order-row">
+    <tr>
+      <td data-f="id"></td>
+      <td data-f="customer"></td>
+      <td data-f="date"></td>
+      <td data-f="payment"></td>
+      <td data-f="total" class="num"></td>
+      <td><span class="status" data-f="status"></span></td>
+      <td><select class="input input-sm" data-f="next-status" aria-label="Change order status"></select></td>
     </tr>
   </template>
 
@@ -292,9 +355,7 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <div id="footer-placeholder"></div>
-  <script src="js/components.js" defer></script>
-  <script src="js/config.js" defer></script>
-  <script src="js/dashboard.js defer"></script>
+  <script src="config.js"></script>
+  <script src="js/dashboard.js"></script>
 </body>
 </html>
