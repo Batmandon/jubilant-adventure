@@ -66,7 +66,8 @@ button { cursor: pointer; }
 .nav-item:hover { background: var(--navy-soft); color: #fff; }
 .nav-item.active { background: var(--teal); color: #fff; }
 .nav-item i { width: 18px; text-align: center; }
-.nav-logout { margin-top: auto; }
+.nav-bottom { margin-top: auto; display: grid; gap: 6px; }
+a.nav-item { text-decoration: none; }
 
 .main { padding: 28px 28px 60px; min-width: 0; max-width: 1200px; width: 100%; }
 .topbar { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 22px; }
@@ -128,9 +129,20 @@ button { cursor: pointer; }
 .status-cancelled,
 .status-inactive   { background: #fee2e2; color: #b91c1c; }
 
+/* ---------- Card header + text button ---------- */
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; }
+.card-head .card-title { margin-bottom: 0; }
+.link-btn {
+  background: none; border: 0; padding: 4px 0;
+  color: var(--teal-dark); font-weight: 600; font-size: 0.88rem;
+}
+.link-btn:hover { text-decoration: underline; }
+
 /* ---------- Toolbar + pager ---------- */
 .toolbar { display: flex; gap: 12px; margin-bottom: 16px; }
 .toolbar .input { flex: 1; min-width: 0; }
+.toolbar .select { flex: 0 0 200px; }
+.input-sm { width: auto; min-width: 130px; padding: 6px 10px; font-size: 0.85rem; border-radius: 10px; }
 .pager { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
 
 /* ---------- Buttons ---------- */
@@ -219,15 +231,19 @@ legend { padding: 0 8px; font-weight: 600; font-size: 0.9rem; color: var(--teal-
   }
   .nav { grid-auto-flow: column; }
   .nav-item { padding: 9px 12px; }
-  .nav-logout { margin-top: 0; margin-left: auto; width: auto; }
+  .nav-bottom { margin-top: 0; margin-left: auto; grid-auto-flow: column; }
+  .nav-bottom .nav-item { width: auto; }
   .main { padding: 20px 16px 60px; }
   .tiles { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 560px) {
+  .brand { font-size: 0; }
+  .brand i { font-size: 1.2rem; }
   .brand span, .nav-item span { display: none; }
   .nav-item { padding: 10px 12px; }
   .toolbar { flex-direction: column; }
+  .toolbar .select { flex: 1 1 auto; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .salt-row { grid-template-columns: 1fr 100px 34px; }
   .tile-value { font-size: 1.5rem; }
