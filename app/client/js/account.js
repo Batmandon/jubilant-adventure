@@ -540,20 +540,26 @@ $("logout-btn").addEventListener("click", async () => {
 async function init() {
   showTab(location.hash.slice(1) || "profile", { updateHash: false });
 
-  const [profile, addresses, orders] = await Promise.allSettled([
-    request("GET", PATHS.profile),
+  // 1) profile first: decides which page this user belongs on
+  let profile;
+  try {
+    profile = await request("GET", PATHS.profile);
+  } catch (err) {
+    if (!err.unauthorized) showMessage(profileMsg, "Could not load your profile.", "error");
+    return;
+  }
+  if (profile.role === "admin") { window.location.replace("dashboard.html"); return; }
+  state.profile = profile;
+  renderProfile();
+
+  // 2) customer only: addresses and orders
+  const [addresses, orders] = await Promise.allSettled([
     request("GET", PATHS.addresses),
     request("GET", PATHS.orders),
   ]);
+  if ([addresses, orders].some((r) => r.status === "rejected" && r.reason.unauthorized)) return;
 
-  // not logged in: request() is already sending the user to the login page
-  if ([profile, addresses, orders].some((r) => r.status === "rejected" && r.reason.unauthorized)) return;
-
-  // each section loads on its own, so one failing endpoint does not break the others
   const failed = (list, text) => list.replaceChildren(el("p", { class: "muted", text }));
-
-  if (profile.status === "fulfilled") { state.profile = profile.value; renderProfile(); }
-  else showMessage(profileMsg, "Could not load your profile.", "error");
 
   if (addresses.status === "fulfilled") { state.addresses = toList(addresses.value); renderAddresses(); }
   else failed(addressList, "Could not load your addresses. Please refresh the page.");
