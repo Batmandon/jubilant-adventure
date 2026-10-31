@@ -12,4 +12,6 @@ app/server/uploads/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.readme.md/
+readme.md
+app/server/routers/postman/
+app/server/routers/.postman/
